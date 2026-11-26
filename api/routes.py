@@ -1,4 +1,12 @@
-"""HTTP and WebSocket routes: /health, /ingest, /ask, /ask/audio, /ws/voice.
+"""
+File: api/routes.py
+
+Description:
+    HTTP and WebSocket routes: /health, /client-log, /ingest, /ask, /ask/audio, /ws/voice.
+
+    All heavy work runs in the thread pool under asyncio timeouts (api.request_timeout_s);
+    every response carries per-stage timings (stt, rewrite, retrieval, llm_first_token, llm,
+    tts) and every log line carries the request id.
 
 Flow:
     GET  /health     -> Services.status()
@@ -12,9 +20,35 @@ Flow:
                         -> each "sentence" event: tts.synthesize() -> JSON + binary WAV frame
                         -> final "result" JSON with citations and timings
 
-All heavy work runs in the thread pool under asyncio timeouts (api.request_timeout_s);
-every response carries per-stage timings (stt, rewrite, retrieval, llm_first_token, llm,
-tts) and every log line carries the request id.
+Libraries used:
+    asyncio - standard library; timeouts, the event loop and the sentence event queue
+    base64 - standard library; encodes the answer WAV for the JSON response
+    json - standard library; parses text WebSocket messages
+    logging - standard library; module logger for transcripts and results
+    threading - standard library; worker thread that streams the LLM answer
+    typing - standard library; TYPE_CHECKING and Any for type hints
+    fastapi - third party; router, request, upload, WebSocket and HTTP error types
+    starlette - third party; WebSocketDisconnect exception
+    api.middleware - project; new_request_id for WebSocket turns
+    api.schemas - project; request and response models
+    api.services - project; Services type (type checking only)
+    common.logging - project; request_id_var so log lines carry the request id
+    common.timing - project; StageTimer for per-stage timings
+    rag.llm - project; LLMError raised when the LLM is unavailable
+    rag.pipeline - project; AnswerResult type (type checking only)
+    rag.sentences - project; split_sentences splits the spoken answer for TTS
+    voice.audio - project; concat_wav and wav_duration_s for the reply audio
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  POST /client-log for page events; transcripts logged; WebSocket
+                              result keeps passages.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -47,11 +81,28 @@ router = APIRouter()
 
 
 def _services(request: Request | WebSocket) -> Services:
+    """
+    Function name: _services
+    Purpose: Return the Services object stored on the application state.
+    Parameters:
+        request (Request | WebSocket): The current HTTP request or WebSocket connection.
+    Returns:
+        Services: The shared services of the application.
+    """
     return request.app.state.services
 
 
 async def _in_thread(fn, timeout_s: float):
-    """Run blocking fn in the thread pool with a timeout mapped to HTTP errors."""
+    """
+    Function name: _in_thread
+    Purpose: Run a blocking function in the thread pool with a timeout and map failures to
+             HTTP errors: timeout to 504, LLMError to 503 and FileNotFoundError to 409.
+    Parameters:
+        fn (Callable): Function with no arguments to run in the thread pool.
+        timeout_s (float): Time limit in seconds.
+    Returns:
+        Any: The value returned by fn.
+    """
     try:
         return await asyncio.wait_for(run_in_threadpool(fn), timeout=timeout_s)
     except TimeoutError as e:
@@ -64,6 +115,17 @@ async def _in_thread(fn, timeout_s: float):
 
 
 def _response_fields(rid: str, result: AnswerResult, timer: StageTimer) -> dict[str, Any]:
+    """
+    Function name: _response_fields
+    Purpose: Build the common response fields from an answer result: drop the raw LLM
+             answer and add the timings and the request id.
+    Parameters:
+        rid (str): Request id.
+        result (AnswerResult): Answer returned by the pipeline.
+        timer (StageTimer): Timer holding the stage timings of this request.
+    Returns:
+        dict[str, Any]: Fields for AskResponse or the WebSocket "result" message.
+    """
     d = result.to_dict()
     d.pop("raw_answer", None)
     d["timings"] = timer.as_dict()
@@ -72,6 +134,17 @@ def _response_fields(rid: str, result: AnswerResult, timer: StageTimer) -> dict[
 
 
 def _log_done(kind: str, result: AnswerResult, timer: StageTimer) -> None:
+    """
+    Function name: _log_done
+    Purpose: Write one log line for a finished answer with the found flag, the citation
+             count and the stage timings.
+    Parameters:
+        kind (str): Name of the route that produced the answer, e.g. "ask".
+        result (AnswerResult): Answer returned by the pipeline.
+        timer (StageTimer): Timer holding the stage timings of this request.
+    Returns:
+        None
+    """
     log.info(
         "%s done found=%s citations=%d %s",
         kind,
@@ -83,7 +156,14 @@ def _log_done(kind: str, result: AnswerResult, timer: StageTimer) -> None:
 
 @router.get("/health")
 async def health(request: Request) -> dict[str, Any]:
-    """Liveness plus component readiness (does not load models)."""
+    """
+    Function name: health
+    Purpose: Report liveness plus component readiness. It does not load any models.
+    Parameters:
+        request (Request): The current HTTP request.
+    Returns:
+        dict[str, Any]: {"status": "ok"} merged with Services.status().
+    """
     svc = _services(request)
     status = await run_in_threadpool(svc.status)
     return {"status": "ok", **status}
@@ -91,10 +171,16 @@ async def health(request: Request) -> dict[str, Any]:
 
 @router.post("/client-log", status_code=204)
 async def client_log(request: Request) -> None:
-    """Write one event from the web page (button clicks, microphone results) to the server log.
-
-    Used to debug recording problems that never reach the server, such as a blocked or
-    silent microphone. The body is a small JSON object; it is truncated before logging.
+    """
+    Function name: client_log
+    Purpose: Write one event from the web page (button clicks, microphone results) to the
+             server log. Used to debug recording problems that never reach the server, such
+             as a blocked or silent microphone. The body is a small JSON object; it is
+             truncated to 500 bytes before logging, and an unreadable body never fails.
+    Parameters:
+        request (Request): The current HTTP request carrying the event body.
+    Returns:
+        None: The route answers with status 204 and no body.
     """
     try:
         body = (await request.body())[:500].decode("utf-8", errors="replace")
@@ -105,7 +191,15 @@ async def client_log(request: Request) -> None:
 
 @router.post("/ingest", response_model=IngestResponse)
 async def ingest(request: Request) -> IngestResponse:
-    """Re-index data/docs and reload the retriever."""
+    """
+    Function name: ingest
+    Purpose: Re-index data/docs and reload the retriever. The time limit is five times the
+             normal request timeout.
+    Parameters:
+        request (Request): The current HTTP request.
+    Returns:
+        IngestResponse: The request id and the index build manifest.
+    """
     svc = _services(request)
     manifest = await _in_thread(svc.ingest, svc.settings.api.request_timeout_s * 5)
     return IngestResponse(request_id=request.state.request_id, manifest=manifest)
@@ -113,7 +207,16 @@ async def ingest(request: Request) -> IngestResponse:
 
 @router.post("/ask", response_model=AskResponse)
 async def ask(body: AskRequest, request: Request) -> AskResponse:
-    """Text question -> cited answer."""
+    """
+    Function name: ask
+    Purpose: Answer a text question with a cited answer, using the requested retrieval mode
+             and rewrite option.
+    Parameters:
+        body (AskRequest): The question, retrieval mode and rewrite option.
+        request (Request): The current HTTP request.
+    Returns:
+        AskResponse: The answer, citations, passages and stage timings.
+    """
     svc = _services(request)
     timer = StageTimer()
     result = await _in_thread(
@@ -126,7 +229,17 @@ async def ask(body: AskRequest, request: Request) -> AskResponse:
 
 @router.post("/ask/audio", response_model=AudioAskResponse)
 async def ask_audio(request: Request, file: UploadFile = File(...)) -> AudioAskResponse:
-    """Recorded question (WAV, or any format ffmpeg/PyAV decodes) -> transcript, answer, WAV."""
+    """
+    Function name: ask_audio
+    Purpose: Answer a recorded question (WAV, or any format ffmpeg/PyAV decodes) with the
+             transcript, the cited answer and the spoken answer as one WAV. Empty uploads
+             give 400, uploads over api.max_upload_mb give 413 and silence gives 422.
+    Parameters:
+        request (Request): The current HTTP request.
+        file (UploadFile): The uploaded audio recording.
+    Returns:
+        AudioAskResponse: The answer fields plus the transcript and base64 WAV audio.
+    """
     svc = _services(request)
     audio = await file.read()
     if not audio:
@@ -136,6 +249,15 @@ async def ask_audio(request: Request, file: UploadFile = File(...)) -> AudioAskR
     timer = StageTimer()
 
     def work() -> tuple[str, AnswerResult, bytes]:
+        """
+        Function name: work
+        Purpose: Blocking part of ask_audio: transcribe the audio, answer the transcript,
+                 synthesize each spoken sentence and join the sentence WAVs.
+        Parameters:
+            None
+        Returns:
+            tuple[str, AnswerResult, bytes]: The transcript, the answer and the joined WAV.
+        """
         with timer.stage("stt"):
             transcript = svc.stt().transcribe(audio).text
         log.info("transcript %r", transcript)  # what Whisper heard, to check not-found answers
@@ -163,7 +285,16 @@ async def ask_audio(request: Request, file: UploadFile = File(...)) -> AudioAskR
 
 @router.websocket("/ws/voice")
 async def ws_voice(ws: WebSocket) -> None:
-    """Streaming voice turn(s); see the module docstring for the message protocol."""
+    """
+    Function name: ws_voice
+    Purpose: Handle streaming voice turns on one WebSocket; see the module docstring for the
+             message protocol. Each message gets its own request id and time limit, and
+             timeouts and known errors are sent to the client as "error" messages.
+    Parameters:
+        ws (WebSocket): The client WebSocket connection.
+    Returns:
+        None
+    """
     await ws.accept()
     svc = _services(ws)
     try:
@@ -187,13 +318,33 @@ async def ws_voice(ws: WebSocket) -> None:
 
 
 async def _voice_turn(ws: WebSocket, svc: Services, message: dict, rid: str) -> None:
-    """One question on the socket: transcribe, stream sentences as audio, send the result."""
+    """
+    Function name: _voice_turn
+    Purpose: Handle one question on the socket: transcribe audio bytes or read the JSON
+             question, stream each answer sentence as JSON and WAV audio, then send the
+             final result.
+    Parameters:
+        ws (WebSocket): The client WebSocket connection.
+        svc (Services): The shared services of the application.
+        message (dict): The received WebSocket message (audio bytes or JSON text).
+        rid (str): Request id of this turn.
+    Returns:
+        None
+    """
     timer = StageTimer()
     await ws.send_json({"type": "start", "request_id": rid})
     if message.get("bytes"):
         audio = message["bytes"]
 
         def stt() -> str:
+            """
+            Function name: stt
+            Purpose: Transcribe the received audio bytes, timed as the "stt" stage.
+            Parameters:
+                None
+            Returns:
+                str: The transcribed text.
+            """
             with timer.stage("stt"):
                 return svc.stt().transcribe(audio).text
 
@@ -213,6 +364,15 @@ async def _voice_turn(ws: WebSocket, svc: Services, message: dict, rid: str) -> 
     pipeline = svc.pipeline()
 
     def produce() -> None:
+        """
+        Function name: produce
+        Purpose: Run the streaming answer and put each event on the asyncio queue. An
+                 exception is passed on as an "exception" event, and None marks the end.
+        Parameters:
+            None
+        Returns:
+            None
+        """
         # Runs in a plain thread so LLM generation continues while TTS speaks earlier sentences.
         try:
             for event in pipeline.stream_answer(question, "full", timer):
@@ -235,6 +395,14 @@ async def _voice_turn(ws: WebSocket, svc: Services, message: dict, rid: str) -> 
             await ws.send_json({"type": "sentence", "index": event["index"], "text": text})
 
             def speak(t: str = text) -> bytes:
+                """
+                Function name: speak
+                Purpose: Synthesize one sentence to WAV, timed as the "tts" stage.
+                Parameters:
+                    t (str): The sentence text; defaults to the current sentence.
+                Returns:
+                    bytes: WAV audio for the sentence.
+                """
                 with timer.stage("tts"):
                     return tts.synthesize(t)
 

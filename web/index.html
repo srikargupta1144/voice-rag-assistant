@@ -40,6 +40,7 @@
                               recording, a player for the user's own recording,
                               and a microphone picker (a wrong input device gives
                               silent recordings).
+    2026-11-26  Srikar Gupta  Function comments for every function in the standard format.
 -->
 <html lang="en">
 <head>
@@ -255,6 +256,12 @@
 
 <script>
 "use strict";
+/**
+ * Function name: $
+ * Purpose: Short form of document.getElementById.
+ * Parameters: id (element id).
+ * Returns: the element, or null when no element has that id.
+ */
 const $ = (id) => document.getElementById(id);
 
 /**
@@ -286,6 +293,13 @@ let pcmChunks = [], recording = false, startedAt = 0, peakRms = 0, tick = null, 
 let ws = null, playQueue = Promise.resolve(), lastReply = [], sentences = [];
 
 // ---------------------------------------------------------------- helpers
+/**
+ * Function name: ctx
+ * Purpose: Return the shared AudioContext, creating it on first use and resuming
+ *          it when the browser has suspended it.
+ * Parameters: none.
+ * Returns: the AudioContext.
+ */
 function ctx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === "suspended") audioCtx.resume();
@@ -318,17 +332,37 @@ function setStep(name) {
     `<span class="step ${i < idx || name === "Done" ? "done" : i === idx ? "active" : ""}">${s}</span>`).join("");
 }
 
+/**
+ * Function name: setBusy
+ * Purpose: Mark a question as in progress (or finished): set the busy flag, show
+ *          the busy state on the microphone when not recording, and disable or
+ *          enable the text form buttons and sample chips.
+ * Parameters: on (true while a question is being answered).
+ * Returns: nothing.
+ */
 function setBusy(on) {
   busy = on;
   $("mic").classList.toggle("busy", on && !recording);
   document.querySelectorAll("#textform .btn, .chip").forEach(b => b.disabled = on);
 }
 
+/**
+ * Function name: setConn
+ * Purpose: Show the server connection state as a coloured dot and a short label.
+ * Parameters: state ("on" | "off", any other value shows "Connecting").
+ * Returns: nothing.
+ */
 function setConn(state) {
   $("connDot").className = "dot " + (state === "on" ? "on" : state === "off" ? "off" : "");
   $("connText").textContent = state === "on" ? "Server connected" : state === "off" ? "Server offline" : "Connecting";
 }
 
+/**
+ * Function name: escapeHtml
+ * Purpose: Escape &, <, >, " and ' so text can be placed safely inside HTML.
+ * Parameters: s (any value; it is converted to a string).
+ * Returns: the escaped string.
+ */
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
@@ -342,7 +376,13 @@ function escapeHtml(s) {
  */
 function encodeWav(samples, rate) {
   const buf = new ArrayBuffer(44 + samples.length * 2), v = new DataView(buf);
-  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  /**
+   * Function name: w
+   * Purpose: Write an ASCII tag (for example "RIFF") into the header byte by byte.
+   * Parameters: o (byte offset), s (ASCII string).
+   * Returns: nothing.
+   */
+  const w =(o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, "RIFF"); v.setUint32(4, 36 + samples.length * 2, true); w(8, "WAVE"); w(12, "fmt ");
   v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
   v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true);
@@ -378,10 +418,23 @@ $("meter").innerHTML = "<span></span>".repeat(BARS);
 const bars = [...$("meter").children];
 const levels = new Array(BARS).fill(0);
 
+/**
+ * Function name: pushLevel
+ * Purpose: Add one audio level to the meter, scrolling older levels to the left,
+ *          and redraw the bar heights.
+ * Parameters: rms (root mean square level of one audio block, 0..1).
+ * Returns: nothing.
+ */
 function pushLevel(rms) {
   levels.shift(); levels.push(Math.min(1, rms * 12));
   bars.forEach((b, i) => { b.style.height = `${4 + levels[i] * 30}px`; });
 }
+/**
+ * Function name: resetMeter
+ * Purpose: Clear all stored levels and set every meter bar back to its lowest height.
+ * Parameters: none.
+ * Returns: nothing.
+ */
 function resetMeter() { levels.fill(0); bars.forEach(b => { b.style.height = "4px"; }); }
 
 // ---------------------------------------------------------------- recording
@@ -446,6 +499,13 @@ async function startRecording() {
   }, 100);
 }
 
+/**
+ * Function name: releaseMic
+ * Purpose: Stop the timer, disconnect the audio nodes, stop the microphone tracks
+ *          and put the recording controls and texts back to their idle state.
+ * Parameters: none.
+ * Returns: nothing.
+ */
 function releaseMic() {
   clearInterval(tick); tick = null;
   try { source && source.disconnect(); processor && processor.disconnect(); } catch (e) { /* already closed */ }
@@ -463,7 +523,7 @@ function releaseMic() {
 /**
  * Function name: stopRecording
  * Purpose: Stop capture, check the recording is long and loud enough, and send it.
- * Parameters: none.
+ * Parameters: cancel (true to discard the recording without sending it).
  * Returns: Promise that resolves after the audio is sent.
  */
 async function stopRecording(cancel = false) {
@@ -501,6 +561,12 @@ async function stopRecording(cancel = false) {
   }
 }
 
+/**
+ * Function name: toggleRecording
+ * Purpose: Microphone button handler: stop and send when recording, otherwise start.
+ * Parameters: none.
+ * Returns: nothing.
+ */
 function toggleRecording() { recording ? stopRecording() : startRecording(); }
 
 /**
@@ -556,6 +622,14 @@ function play(arrayBuffer, remember = true) {
 $("replay").addEventListener("click", () => { lastReply.forEach(b => play(b, false)); });
 
 // ---------------------------------------------------------------- rendering
+/**
+ * Function name: beginTurn
+ * Purpose: Prepare the page for a new question: set busy, clear the previous
+ *          reply audio, answer, badge and query, and hide the sources, timings
+ *          and passages sections.
+ * Parameters: question (typed question text, or "" for a voice question).
+ * Returns: nothing.
+ */
 function beginTurn(question) {
   setBusy(true); lastReply = []; sentences = []; $("replay").disabled = true;
   $("question").textContent = question || "(voice question)";
@@ -599,6 +673,12 @@ function render(r) {
   const ps = r.passages || [];
   $("passages").innerHTML = ps.map(p => {
     const s = p.scores || {};
+    /**
+     * Function name: fmt
+     * Purpose: Format one passage score for display, if the passage has it.
+     * Parameters: k (score key), label (text shown before the score).
+     * Returns: HTML for the score with three decimals, or "" when it is missing.
+     */
     const fmt = (k, label) => (k in s ? `<span>${label} <b>${Number(s[k]).toFixed(3)}</b></span>` : "");
     return `<div class="passage"><div class="meta"><span><b>#${p.rank}</b> ${escapeHtml(p.label)}</span>` +
       fmt("dense", "dense") + fmt("bm25", "BM25") + fmt("rrf", "RRF") + fmt("rerank", "re-rank") +
@@ -607,8 +687,21 @@ function render(r) {
   $("passagesWrap").hidden = ps.length === 0;
 }
 
+/**
+ * Function name: finishTurn
+ * Purpose: End a successful question: clear the busy state and mark all steps done.
+ * Parameters: none.
+ * Returns: nothing.
+ */
 function finishTurn() { setBusy(false); setStep("Done"); }
 
+/**
+ * Function name: failTurn
+ * Purpose: End a failed question: log it, clear the busy state and steps, and
+ *          show a friendly message for no speech or a timeout, or the raw error.
+ * Parameters: detail (error text from the server or the browser).
+ * Returns: nothing.
+ */
 function failTurn(detail) {
   clog("turn_failed", { detail: String(detail) });
   setBusy(false); setStep("");
@@ -652,6 +745,14 @@ function socket() {
   });
 }
 
+/**
+ * Function name: onSocketMessage
+ * Purpose: Handle one WebSocket message: binary data is a sentence WAV to play;
+ *          JSON messages ("start", "transcript", "query", "sentence", "result",
+ *          "error") update the steps, question, answer text and final result.
+ * Parameters: ev (MessageEvent from the WebSocket).
+ * Returns: nothing.
+ */
 function onSocketMessage(ev) {
   if (typeof ev.data !== "string") { setStep("Speaking"); play(ev.data); return; }
   const m = JSON.parse(ev.data);

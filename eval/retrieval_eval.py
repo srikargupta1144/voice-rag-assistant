@@ -1,4 +1,11 @@
-"""Retrieval evaluation (no LLM): Recall@5 and MRR per retrieval mode, plus the not-found gate.
+"""
+File: eval/retrieval_eval.py
+
+Description:
+    Retrieval evaluation (no LLM): Recall@5 and MRR per retrieval mode, plus the not-found
+    gate.
+
+    Questions are used as written (no LLM rewrite), so CI can run this with no LLM at all.
 
 Flow:
     uv run python -m eval.retrieval_eval [--modes dense,bm25,hybrid,full]
@@ -11,7 +18,27 @@ Flow:
                -> not-found gate accuracy at retrieval.not_found_threshold
         -> eval/results/retrieval.json        (CI gate reads modes.full.recall_at_5)
 
-Questions are used as written (no LLM rewrite), so CI can run this with no LLM at all.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    argparse - standard library; command-line options for the modes and output path
+    json - standard library; writes the results document
+    logging - standard library; logs per-mode metrics
+    os - standard library; sets KMP_DUPLICATE_LIB_OK and creates the output folder
+    time - standard library; measures retrieval latency
+    common.logging - project; configures logging from the settings
+    configs - project; loads the application settings
+    eval.dataset - project; golden questions, relevance matching and the results folder
+    eval.metrics - project; mean, recall_at_k and reciprocal_rank
+    retrieval.retriever - project; the retrieval modes and the on-disk retriever loader
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -33,7 +60,19 @@ log = logging.getLogger(__name__)
 
 
 def evaluate(modes: list[str], depth: int = 10) -> dict:
-    """Run every mode over the golden set and return the results document."""
+    """
+    Function name: evaluate
+    Purpose: Run every retrieval mode over the answerable golden questions and build the
+        results document with Recall@5, MRR, median latency and misses per mode. When the
+        full mode is included, it also measures the not-found gate accuracy on the top
+        re-ranker score of every question and copies the full-mode metrics to the top level
+        for eval.gate.
+    Parameters:
+        modes (list[str]): Retrieval modes to evaluate, for example dense, bm25, hybrid, full.
+        depth (int): Number of hits retrieved per question for the rank metrics.
+    Returns:
+        dict: The results document written to eval/results/retrieval.json.
+    """
     settings = get_settings()
     questions = load_questions()
     answerable = [q for q in questions if q.answerable]
@@ -106,7 +145,21 @@ def evaluate(modes: list[str], depth: int = 10) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """
+    Function name: main
+    Purpose: Parse the command-line options, run the evaluation, write the results JSON file
+        and print a summary table per mode plus the not-found gate line when present.
+    Parameters:
+        None
+    Returns:
+        None: The results are written to a file and printed.
+    """
+    parser = argparse.ArgumentParser(
+        description=(
+            "Retrieval evaluation (no LLM): Recall@5 and MRR per retrieval mode, "
+            "plus the not-found gate."
+        )
+    )
     parser.add_argument("--modes", default=",".join(MODES))
     parser.add_argument("--out", default=str(RESULTS / "retrieval.json"))
     args = parser.parse_args()

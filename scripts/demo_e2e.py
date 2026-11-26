@@ -1,4 +1,11 @@
-"""End-to-end check against a running API: text question, audio question, WebSocket turn.
+"""
+File: scripts/demo_e2e.py
+
+Description:
+    End-to-end check against a running API: text question, audio question, WebSocket turn.
+
+    Client-side times include HTTP overhead; server-side per-stage timings come from the
+    responses themselves.
 
 Flow:
     uv run vra serve          (in another terminal; warms up models first)
@@ -11,8 +18,27 @@ Flow:
         -> word_error_rate(spoken question, transcript)
         -> eval/results/e2e.json  and reply audio under data/demo/
 
-Client-side times include HTTP overhead; server-side per-stage timings come from the
-responses themselves.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    argparse - standard library; command-line options (--url)
+    base64 - standard library; decodes the reply WAV from /ask/audio
+    json - standard library; parses WebSocket events and writes the report
+    os - standard library; sets KMP_DUPLICATE_LIB_OK before models load
+    time - standard library; client-side timings
+    httpx - third party; HTTP calls to the running API
+    websockets - third party; synchronous WebSocket client for /ws/voice
+    configs - project; repository root path and settings
+    voice.tts - project; Piper text-to-speech for the test recording
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format;
+                              short literal --help description.
 """
 
 from __future__ import annotations
@@ -34,7 +60,16 @@ SPOKEN_QUESTION = "Um, how much does Kova charge for an outgoing international w
 
 
 def word_error_rate(reference: str, hypothesis: str) -> float:
-    """Word-level edit distance / reference length (punctuation and case ignored)."""
+    """
+    Function name: word_error_rate
+    Purpose: Compute the word error rate: word-level edit distance divided by the reference
+             length, with punctuation and case ignored.
+    Parameters:
+        reference (str): The text that was actually spoken.
+        hypothesis (str): The transcript to score.
+    Returns:
+        float: The word error rate rounded to four decimal places.
+    """
     norm = lambda s: "".join(c.lower() if c.isalnum() or c.isspace() else " " for c in s).split()  # noqa: E731
     r, h = norm(reference), norm(hypothesis)
     d = list(range(len(h) + 1))
@@ -47,7 +82,17 @@ def word_error_rate(reference: str, hypothesis: str) -> float:
 
 
 def ws_turn(url: str, wav: bytes) -> dict:
-    """Send one recording over /ws/voice; time the first audio frame and the result."""
+    """
+    Function name: ws_turn
+    Purpose: Send one recording over /ws/voice, collect the audio frames and events until
+             the result or error event, and time the first audio frame and the whole turn.
+    Parameters:
+        url (str): The HTTP base URL of the API; it is turned into a WebSocket URL.
+        wav (bytes): The question recording as WAV bytes.
+    Returns:
+        dict: Client timings, sentence count, transcript, answer, citation labels, server
+              timings and the raw audio frames.
+    """
     from websockets.sync.client import connect
 
     ws_url = url.replace("http", "ws", 1) + "/ws/voice"
@@ -81,7 +126,20 @@ def ws_turn(url: str, wav: bytes) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """
+    Function name: main
+    Purpose: Run the text, audio and WebSocket checks against the API, print each part and
+             write the report to eval/results/e2e.json and the audio to data/demo/.
+    Parameters:
+        None
+    Returns:
+        None
+    """
+    parser = argparse.ArgumentParser(
+        description=(
+            "End-to-end check against a running API: text question, audio question, WebSocket turn."
+        )
+    )
     parser.add_argument("--url", default="http://127.0.0.1:8000")
     args = parser.parse_args()
     out_dir = REPO / "data" / "demo"

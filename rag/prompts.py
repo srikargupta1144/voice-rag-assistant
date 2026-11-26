@@ -1,4 +1,12 @@
-"""Prompt builders: the grounded answer prompt and the spoken-question rewrite prompt.
+"""
+File: rag/prompts.py
+
+Description:
+    Prompt builders: the grounded answer prompt and the spoken-question rewrite prompt.
+
+    The model cites passage numbers ([1], [2]) rather than file names: small local models
+    copy a number reliably but often mangle long file names. rag.citations maps the numbers
+    back to "[source, page]" labels for display.
 
 Flow:
     rag.pipeline.AnswerPipeline.stream_answer()
@@ -7,9 +15,19 @@ Flow:
     rag.rewrite.rewrite_query()
         -> build_rewrite_messages(utterance)
 
-The model cites passage numbers ([1], [2]) rather than file names: small local models copy
-a number reliably but often mangle long file names. rag.citations maps the numbers back to
-"[source, page]" labels for display.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    collections.abc - standard library; Sequence type for the list of hits
+    common.types - project; the Hit type for retrieved passages
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -68,7 +86,15 @@ Reply with the rewritten question only."""
 
 
 def format_passages(hits: Sequence[Hit]) -> str:
-    """Numbered passage block; numbering starts at 1 and matches citation markers."""
+    """
+    Function name: format_passages
+    Purpose: Build the numbered passage block for the prompt; numbering starts at 1 and
+             matches the citation markers.
+    Parameters:
+        hits (Sequence[Hit]): The passages to show the model, in order.
+    Returns:
+        str: One line per passage in the form "[n] (label) text".
+    """
     lines = []
     for i, h in enumerate(hits, start=1):
         lines.append(f"[{i}] ({h.chunk.label()}) {h.chunk.text.strip()}")
@@ -78,7 +104,17 @@ def format_passages(hits: Sequence[Hit]) -> str:
 def build_answer_messages(
     question: str, hits: Sequence[Hit], few_shot: bool = True
 ) -> list[dict[str, str]]:
-    """Chat messages for a grounded, cited answer."""
+    """
+    Function name: build_answer_messages
+    Purpose: Build the chat messages for a grounded, cited answer: the system rules, the
+             optional few-shot examples and the user turn with the passages and question.
+    Parameters:
+        question (str): The (rewritten) question to answer.
+        hits (Sequence[Hit]): The passages the answer may use.
+        few_shot (bool): Whether to include the fictional few-shot example turns.
+    Returns:
+        list[dict[str, str]]: The chat messages with "role" and "content" keys.
+    """
     messages = [{"role": "system", "content": ANSWER_SYSTEM}]
     if few_shot:
         messages.extend(_FEW_SHOT)
@@ -92,7 +128,15 @@ def build_answer_messages(
 
 
 def build_rewrite_messages(utterance: str) -> list[dict[str, str]]:
-    """Chat messages for the spoken-question clean-up call."""
+    """
+    Function name: build_rewrite_messages
+    Purpose: Build the chat messages for the spoken-question clean-up call, with one worked
+             example before the real utterance.
+    Parameters:
+        utterance (str): The spoken or typed question to clean up.
+    Returns:
+        list[dict[str, str]]: The chat messages with "role" and "content" keys.
+    """
     return [
         {"role": "system", "content": REWRITE_SYSTEM},
         {"role": "user", "content": "uh hi, so like, what's the, um, late fee on books?"},

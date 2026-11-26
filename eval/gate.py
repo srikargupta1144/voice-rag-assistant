@@ -1,4 +1,11 @@
-"""CI quality gate: fail when Recall@5 drops below the committed baseline.
+"""
+File: eval/gate.py
+
+Description:
+    CI quality gate: fail when Recall@5 drops below the committed baseline.
+
+    The baseline is updated deliberately (commit a new eval/baseline.json after an
+    improvement), never automatically. Standard library only.
 
 Flow:
     CI retrieval-gate job (after `vra ingest` and `python -m eval.retrieval_eval`)
@@ -6,8 +13,22 @@ Flow:
         -> compares recall_at_5 against eval/baseline.json
         -> exit 1 on regression, so a merge that hurts retrieval is blocked
 
-The baseline is updated deliberately (commit a new eval/baseline.json after an
-improvement), never automatically. Standard library only.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    argparse - standard library; command-line options for the results, baseline, metric
+        and tolerance
+    json - standard library; reads the results and baseline files
+    sys - standard library; sets the process exit code
+    pathlib - standard library; builds the default file paths
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -21,7 +42,19 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 def check(results: dict, baseline: dict, metric: str, tolerance: float) -> tuple[bool, str]:
-    """(passed, message) for one metric."""
+    """
+    Function name: check
+    Purpose: Compare one metric in the results against the baseline. The gate passes when the
+        baseline has no value for the metric, and fails when the results lack the metric or
+        when the result plus the tolerance is below the baseline.
+    Parameters:
+        results (dict): Results document from eval.retrieval_eval.
+        baseline (dict): Committed baseline document.
+        metric (str): Name of the metric key to compare.
+        tolerance (float): Allowed drop below the baseline.
+    Returns:
+        tuple[bool, str]: Whether the gate passed, and a message describing the outcome.
+    """
     base, cur = baseline.get(metric), results.get(metric)
     if base is None:
         return True, f"gate: baseline has no {metric}; passing"
@@ -33,7 +66,18 @@ def check(results: dict, baseline: dict, metric: str, tolerance: float) -> tuple
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """
+    Function name: main
+    Purpose: Parse the command-line options, read the results and baseline files, run the
+        check and print its message. A missing results file fails the gate.
+    Parameters:
+        None
+    Returns:
+        int: Process exit code, 0 when the gate passes and 1 when it fails.
+    """
+    parser = argparse.ArgumentParser(
+        description="CI quality gate: fail when Recall@5 drops below the committed baseline."
+    )
     parser.add_argument(
         "--results", type=Path, default=REPO / "eval" / "results" / "retrieval.json"
     )

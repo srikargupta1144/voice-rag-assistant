@@ -1,4 +1,13 @@
-"""Heading-aware chunking: one chunk per Markdown section, long sections split with overlap.
+"""
+File: ingest/chunking.py
+
+Description:
+    Heading-aware chunking: one chunk per Markdown section; long sections are split with
+    overlap.
+
+    Token counts use count_tokens(), a word-and-punctuation approximation of subword tokens.
+    It avoids downloading a tokenizer at ingest time and is within about 20 percent of the
+    bge WordPiece count on English prose, which is close enough for a ~500 token budget.
 
 Flow:
     ingest.build.build_index()
@@ -8,9 +17,20 @@ Flow:
             -> SentenceSplitter.split_text()                   # only sections > chunk_tokens
         -> list[common.types.Chunk] with {source, page, section}
 
-Token counts use count_tokens(), a word-and-punctuation approximation of subword tokens.
-It avoids downloading a tokenizer at ingest time and is within about 20 percent of the
-bge WordPiece count on English prose, which is close enough for a ~500 token budget.
+Libraries used:
+    re - standard library; token and heading regular expressions
+    collections.abc - standard library; Sequence type hint
+    llama_index.core - third party; Document, MarkdownNodeParser and SentenceSplitter
+    common.types - project; Chunk record
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -28,19 +48,46 @@ _HEADING = re.compile(r"^\s*#{1,6}\s+(.*)$")
 
 
 def tokenize(text: str) -> list[str]:
-    """Word and punctuation tokens (the unit for chunk_tokens / overlap_tokens)."""
+    """
+    Function name: tokenize
+    Purpose: Split text into word and punctuation tokens, which are the unit used for
+             chunk_tokens and overlap_tokens.
+    Parameters:
+        text (str): text to split
+    Returns:
+        list[str]: the word and punctuation tokens in order
+    """
     return _TOKEN.findall(text)
 
 
 def count_tokens(text: str) -> int:
-    """Approximate token count of text."""
+    """
+    Function name: count_tokens
+    Purpose: Return the approximate token count of text.
+    Parameters:
+        text (str): text to count
+    Returns:
+        int: number of word and punctuation tokens
+    """
     return len(tokenize(text))
 
 
 def chunk_documents(
     documents: Sequence[Document], chunk_tokens: int = 500, overlap_tokens: int = 50
 ) -> list[Chunk]:
-    """Split documents into heading-scoped chunks no longer than about chunk_tokens."""
+    """
+    Function name: chunk_documents
+    Purpose: Split documents into heading-scoped chunks no longer than about chunk_tokens.
+             The section heading is repeated at the start of every chunk, and chunk ids
+             have the form "source:page:n".
+    Parameters:
+        documents (Sequence[Document]): Markdown documents with source and page metadata
+        chunk_tokens (int): largest section size kept whole; longer sections are split
+        overlap_tokens (int): tokens shared between neighbouring pieces of a long section;
+                              must be smaller than chunk_tokens
+    Returns:
+        list[Chunk]: chunks in document order; sections with no body text are skipped
+    """
     if overlap_tokens >= chunk_tokens:
         raise ValueError("overlap_tokens must be smaller than chunk_tokens")
     md_parser = MarkdownNodeParser(include_metadata=True, include_prev_next_rel=False)
@@ -76,7 +123,16 @@ def chunk_documents(
 
 
 def _section_title(content: str, header_path: str) -> str:
-    """Heading of this node: its own first-line heading, else the last header_path entry."""
+    """
+    Function name: _section_title
+    Purpose: Find the heading of a node: its own first-line heading, otherwise the last
+             entry of header_path.
+    Parameters:
+        content (str): node text
+        header_path (str): slash-separated parent headings from the Markdown parser
+    Returns:
+        str: the heading text, or an empty string when there is none
+    """
     first = content.lstrip().splitlines()[0] if content.strip() else ""
     m = _HEADING.match(first)
     if m:
@@ -86,7 +142,14 @@ def _section_title(content: str, header_path: str) -> str:
 
 
 def _strip_heading_line(content: str) -> str:
-    """Drop the leading Markdown heading line (it is re-added as plain text)."""
+    """
+    Function name: _strip_heading_line
+    Purpose: Drop the leading Markdown heading line, because it is added back as plain text.
+    Parameters:
+        content (str): node text
+    Returns:
+        str: the text without its first line when that line is a heading
+    """
     lines = content.lstrip().splitlines()
     if lines and _HEADING.match(lines[0]):
         lines = lines[1:]

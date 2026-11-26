@@ -1,4 +1,11 @@
-"""Spoken-question clean-up: turn "uh, what's the, like, refund rule" into a search query.
+"""
+File: rag/rewrite.py
+
+Description:
+    Spoken-question clean-up: turn "uh, what's the, like, refund rule" into a search query.
+
+    The LLM call costs a few hundred milliseconds on a local 3B model, so "auto" skips it
+    for questions that are already clean (typed questions usually are).
 
 Flow:
     rag.pipeline.AnswerPipeline.stream_answer()
@@ -7,8 +14,22 @@ Flow:
             -> needs_rewrite(question)          # mode "auto": only conversational input
             -> rewrite_query(llm, question)     # one short LLM call (max ~40 tokens)
 
-The LLM call costs a few hundred milliseconds on a local 3B model, so "auto" skips it for
-questions that are already clean (typed questions usually are).
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    logging - standard library; warns when the rewrite call fails
+    re - standard library; filler-word and chatty-phrase patterns
+    typing - standard library; TYPE_CHECKING guard for the LLM client type
+    rag.prompts - project; builds the rewrite prompt messages
+    rag.llm - project; the LLMClient type (type checking only)
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -39,7 +60,15 @@ _CHATTY = re.compile(
 
 
 def strip_fillers(text: str) -> str:
-    """Remove filler words and collapse whitespace."""
+    """
+    Function name: strip_fillers
+    Purpose: Remove filler words and greetings, tidy the spacing before punctuation and
+             collapse whitespace.
+    Parameters:
+        text (str): The spoken or typed question.
+    Returns:
+        str: The question without filler words.
+    """
     out = _FILLERS.sub(" ", text)
     out = re.sub(r"\s+([,?.!])", r"\1", out)
     out = re.sub(r"^[\s,]+", "", out)
@@ -47,12 +76,30 @@ def strip_fillers(text: str) -> str:
 
 
 def needs_rewrite(text: str) -> bool:
-    """Heuristic: conversational fillers, or a long run-on utterance."""
+    """
+    Function name: needs_rewrite
+    Purpose: Heuristic check for input that needs the LLM rewrite: conversational fillers,
+             or a long run-on utterance of more than 25 words.
+    Parameters:
+        text (str): The spoken or typed question.
+    Returns:
+        bool: True when the question should be rewritten by the LLM.
+    """
     return bool(_CHATTY.search(text)) or len(text.split()) > 25
 
 
 def rewrite_query(llm: LLMClient, text: str, max_tokens: int = 40) -> str:
-    """One LLM call; falls back to the filler-stripped text on any failure."""
+    """
+    Function name: rewrite_query
+    Purpose: Rewrite the question with one LLM call, keeping only the first line of the
+             reply; falls back to the filler-stripped text on any failure or empty reply.
+    Parameters:
+        llm (LLMClient): The LLM client used for the rewrite.
+        text (str): The spoken or typed question.
+        max_tokens (int): The token limit for the rewrite reply.
+    Returns:
+        str: The rewritten search question.
+    """
     try:
         out = llm.complete(build_rewrite_messages(text), temperature=0.0, max_tokens=max_tokens)
     except Exception as e:  # rewrite is an optimisation; never fail the request over it
@@ -63,7 +110,19 @@ def rewrite_query(llm: LLMClient, text: str, max_tokens: int = 40) -> str:
 
 
 def prepare_query(llm: LLMClient, text: str, mode: str = "auto", max_tokens: int = 40) -> str:
-    """Search query for text according to the rewrite mode (auto | always | never)."""
+    """
+    Function name: prepare_query
+    Purpose: Build the search query for the text according to the rewrite mode: "never"
+             only trims, "always" calls the LLM, "auto" calls it only for conversational
+             input and otherwise strips fillers.
+    Parameters:
+        llm (LLMClient): The LLM client used when a rewrite is needed.
+        text (str): The spoken or typed question.
+        mode (str): The rewrite mode: "auto", "always" or "never".
+        max_tokens (int): The token limit for the rewrite reply.
+    Returns:
+        str: The search query.
+    """
     if mode == "never":
         return text.strip()
     if mode == "always" or needs_rewrite(text):

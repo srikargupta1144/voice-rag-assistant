@@ -1,4 +1,11 @@
-"""Answer-quality evaluation with a local LLM judge (RAGAS-style metrics, no hosted API).
+"""
+File: eval/answer_eval.py
+
+Description:
+    Answer-quality evaluation with a local LLM judge (RAGAS-style metrics, no hosted API).
+
+    The judge is the same local Ollama model unless --judge-model is given; a 3B judge is
+    lenient and noisy, so treat these numbers as a smoke signal, not a benchmark.
 
 Flow:
     uv run python -m eval.answer_eval [--limit N] [--no-few-shot] [--temperature T] [--tag NAME]
@@ -15,8 +22,32 @@ Flow:
                 -> not-found correctness (declined iff unanswerable)
         -> eval/results/answers[_<tag>].json
 
-The judge is the same local Ollama model unless --judge-model is given; a 3B judge is
-lenient and noisy, so treat these numbers as a smoke signal, not a benchmark.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    argparse - standard library; command-line options for the evaluation run
+    json - standard library; writes the results document
+    logging - standard library; logs per-question scores
+    os - standard library; sets KMP_DUPLICATE_LIB_OK
+    statistics - standard library; median latency figures
+    time - standard library; measures the evaluation time per question
+    common.logging - project; configures logging from the settings
+    configs - project; loads the application settings
+    eval.dataset - project; golden questions, relevance matching and the results folder
+    eval.metrics - project; cosine, mean and the numbered verdict parser
+    rag.citations - project; removes citation markers before judging the answer
+    rag.sentences - project; splits the answer into statements
+    rag.llm - project; builds the judge LLM client (imported inside run)
+    rag.pipeline - project; builds the answer pipeline under evaluation (imported inside run)
+    retrieval.embeddings - project; the encoder for answer relevancy (imported inside run)
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -49,7 +80,18 @@ Write one question per line and nothing else."""
 
 
 def faithfulness(judge, context: str, answer: str) -> tuple[float | None, list]:
-    """Share of answer sentences the judge finds supported by context (None if unparseable)."""
+    """
+    Function name: faithfulness
+    Purpose: Share of answer sentences that the judge finds supported by the context. The
+        answer is split into numbered statements and the judge votes YES or NO on each.
+    Parameters:
+        judge (LLMClient): LLM client used as the judge; its complete() method is called.
+        context (str): Passage text the answering model saw.
+        answer (str): Answer text with citation markers removed.
+    Returns:
+        tuple[float | None, list]: The score (None when the answer has no sentences or the
+            judge output cannot be parsed) and a list of [verdict, statement] pairs.
+    """
     statements = split_sentences(answer)
     if not statements:
         return None, []
@@ -70,7 +112,19 @@ def faithfulness(judge, context: str, answer: str) -> tuple[float | None, list]:
 
 
 def answer_relevancy(judge, encoder, question: str, answer: str) -> tuple[float | None, list]:
-    """Mean cosine between the question and questions generated back from the answer."""
+    """
+    Function name: answer_relevancy
+    Purpose: Mean cosine similarity between the question and up to three questions that the
+        judge generates back from the answer.
+    Parameters:
+        judge (LLMClient): LLM client used as the judge; its complete() method is called.
+        encoder (Encoder): Embedding model; its embed_documents() method is called.
+        question (str): Original golden question.
+        answer (str): Answer text with citation markers removed.
+    Returns:
+        tuple[float | None, list]: The score (None when no question was generated) and the
+            list of generated questions.
+    """
     text = judge.complete(
         [
             {"role": "system", "content": RELEVANCY_SYSTEM},
@@ -87,6 +141,19 @@ def answer_relevancy(judge, encoder, question: str, answer: str) -> tuple[float 
 
 
 def run(limit: int | None, few_shot: bool, temperature: float | None, judge_model: str | None):
+    """
+    Function name: run
+    Purpose: Build the answer pipeline, judge and encoder, answer each golden question and
+        record one result row per question with timings, not-found correctness and, for
+        answered answerable questions, citation correctness, faithfulness and relevancy.
+    Parameters:
+        limit (int | None): Number of questions to evaluate from the start; None or 0 uses all.
+        few_shot (bool): Whether the answer prompt includes the few-shot examples.
+        temperature (float | None): Answer temperature; None uses the configured value.
+        judge_model (str | None): Judge model name; None uses the configured LLM model.
+    Returns:
+        tuple[Settings, list[dict]]: The settings used and the per-question result rows.
+    """
     from rag.llm import build_llm
     from rag.pipeline import build_pipeline
     from retrieval.embeddings import get_encoder
@@ -141,7 +208,16 @@ def run(limit: int | None, few_shot: bool, temperature: float | None, judge_mode
 
 
 def summarize(rows: list[dict]) -> dict:
-    """Aggregate metrics over the per-question rows."""
+    """
+    Function name: summarize
+    Purpose: Aggregate the per-question rows into summary metrics: faithfulness, answer
+        relevancy, answered rate, not-found accuracy, unanswerable decline rate, citation
+        rate and correctness, and median latencies.
+    Parameters:
+        rows (list[dict]): Per-question result rows from run().
+    Returns:
+        dict: The summary metrics.
+    """
     answerable = [r for r in rows if r["answerable"]]
     unanswerable = [r for r in rows if not r["answerable"]]
     answered = [r for r in answerable if r["found"]]
@@ -167,7 +243,20 @@ def summarize(rows: list[dict]) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """
+    Function name: main
+    Purpose: Parse the command-line options, run the evaluation, write the results JSON file
+        (answers.json, or answers_<tag>.json when a tag is given) and print the summary.
+    Parameters:
+        None
+    Returns:
+        None: The results are written to a file and printed.
+    """
+    parser = argparse.ArgumentParser(
+        description=(
+            "Answer-quality evaluation with a local LLM judge (RAGAS-style metrics, no hosted API)."
+        )
+    )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--no-few-shot", action="store_true")
     parser.add_argument("--temperature", type=float)

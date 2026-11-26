@@ -1,4 +1,10 @@
-"""Render measured results into the README between the RESULTS markers.
+"""
+File: eval/report.py
+
+Description:
+    Render measured results into the README between the RESULTS markers.
+
+    Only numbers present in the result files are written; a missing file becomes a note.
 
 Flow:
     uv run python -m eval.report
@@ -7,7 +13,20 @@ Flow:
         -> eval/results/e2e.json         (scripts.demo_e2e)
         -> render_markdown() -> README.md between <!-- RESULTS:START --> and <!-- RESULTS:END -->
 
-Only numbers present in the result files are written; a missing file becomes a note.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    json - standard library; reads the result files
+    re - standard library; finds and replaces the RESULTS block in README.md
+    pathlib - standard library; builds the repository, results and README paths
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -23,17 +42,45 @@ START, END = "<!-- RESULTS:START -->", "<!-- RESULTS:END -->"
 
 
 def _load(name: str) -> dict | None:
+    """
+    Function name: _load
+    Purpose: Read one JSON result file from eval/results when it exists.
+    Parameters:
+        name (str): File name inside eval/results.
+    Returns:
+        dict | None: The parsed document, or None when the file does not exist.
+    """
     p = RESULTS / name
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
 
 
 def _fmt(v, digits: int = 3) -> str:
+    """
+    Function name: _fmt
+    Purpose: Format a value for a Markdown table: floats to a fixed number of decimal places,
+        None as "-", and any other value with str().
+    Parameters:
+        v (float | int | str | None): Value to format.
+        digits (int): Decimal places for floats.
+    Returns:
+        str: The formatted value.
+    """
     if v is None:
         return "-"
     return f"{v:.{digits}f}" if isinstance(v, float) else str(v)
 
 
 def _ms(v) -> str:
+    """
+    Function name: _ms
+    Purpose: Format a duration in milliseconds as "-" for None, "<1 ms" below one
+        millisecond, seconds with one decimal place from 1000 ms, and whole milliseconds
+        otherwise.
+    Parameters:
+        v (float | None): Duration in milliseconds.
+    Returns:
+        str: The formatted duration.
+    """
     if v is None:
         return "-"
     if v < 1:
@@ -42,6 +89,15 @@ def _ms(v) -> str:
 
 
 def retrieval_section(r: dict | None) -> list[str]:
+    """
+    Function name: retrieval_section
+    Purpose: Build the Markdown lines for the retrieval table (one row per mode) and the
+        not-found gate sentence, or a note when the retrieval results are missing.
+    Parameters:
+        r (dict | None): Retrieval results document, or None when it was not generated.
+    Returns:
+        list[str]: Markdown lines for the section.
+    """
     if not r:
         return ["Retrieval results not generated yet (`uv run python -m eval.retrieval_eval`)."]
     names = {
@@ -76,6 +132,16 @@ def retrieval_section(r: dict | None) -> list[str]:
 
 
 def answers_section() -> list[str]:
+    """
+    Function name: answers_section
+    Purpose: Build the Markdown lines for the answer-quality table, one row per
+        eval/results/answers*.json file, plus a judge note taken from the first file; a note
+        is returned when no answer results exist.
+    Parameters:
+        None
+    Returns:
+        list[str]: Markdown lines for the section.
+    """
     files = sorted(RESULTS.glob("answers*.json"))
     if not files:
         return ["Answer-quality results not generated yet (`uv run python -m eval.answer_eval`)."]
@@ -108,6 +174,16 @@ def answers_section() -> list[str]:
 
 
 def latency_section(e: dict | None) -> list[str]:
+    """
+    Function name: latency_section
+    Purpose: Build the Markdown lines for the per-stage latency table (audio and text
+        questions) and the WebSocket streaming sentence, or a note when the end-to-end
+        results are missing.
+    Parameters:
+        e (dict | None): End-to-end results document, or None when it was not generated.
+    Returns:
+        list[str]: Markdown lines for the section.
+    """
     if not e:
         return ["End-to-end timings not generated yet (`uv run python -m scripts.demo_e2e`)."]
     a, t, w = e["audio"]["server_timings"], e["text"]["server_timings"], e["websocket"]
@@ -139,6 +215,14 @@ def latency_section(e: dict | None) -> list[str]:
 
 
 def render_markdown() -> str:
+    """
+    Function name: render_markdown
+    Purpose: Join the retrieval, answers and latency sections into one Markdown block.
+    Parameters:
+        None
+    Returns:
+        str: The Markdown text placed between the RESULTS markers.
+    """
     parts = [
         "### Retrieval",
         "",
@@ -156,6 +240,15 @@ def render_markdown() -> str:
 
 
 def main() -> None:
+    """
+    Function name: main
+    Purpose: Replace the block between the RESULTS markers in README.md with freshly rendered
+        Markdown and print it. Exits with an error when the markers are missing.
+    Parameters:
+        None
+    Returns:
+        None: README.md is rewritten and the Markdown is printed.
+    """
     text = README.read_text(encoding="utf-8")
     block = f"{START}\n{render_markdown()}\n{END}"
     pattern = re.compile(re.escape(START) + r".*?" + re.escape(END), re.DOTALL)

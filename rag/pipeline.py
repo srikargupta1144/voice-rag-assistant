@@ -1,4 +1,12 @@
-"""Question -> cited answer: rewrite, retrieve, not-found gate, grounded generation, citations.
+"""
+File: rag/pipeline.py
+
+Description:
+    Question -> cited answer: rewrite, retrieve, not-found gate, grounded generation,
+    citations.
+
+    Sentence events carry the text to speak (citations stripped), so voice callers can
+    start TTS on the first sentence while the model is still writing the rest.
 
 Flow:
     api.routes, ingest.cli ask, eval.answer_eval
@@ -14,8 +22,30 @@ Flow:
             -> final "result" event carrying AnswerResult
         -> AnswerPipeline.answer() consumes the stream for non-streaming callers
 
-Sentence events carry the text to speak (citations stripped), so voice callers can start
-TTS on the first sentence while the model is still writing the rest.
+Libraries used:
+    __future__ - standard library; postponed evaluation of type annotations
+    logging - standard library; logs not-found decisions
+    collections.abc - standard library; Iterator type for the event stream
+    dataclasses - standard library; the AnswerResult data class and its dictionary form
+    typing - standard library; Any type and TYPE_CHECKING guard
+    common.timing - project; StageTimer for per-stage timings
+    common.types - project; the Hit type for retrieved passages
+    rag.citations - project; weak-evidence gate, not-found check and citation handling
+    rag.prompts - project; builds the answer prompt and the NOT_FOUND reply
+    rag.rewrite - project; prepares the search query from the question
+    rag.sentences - project; splits the streamed answer into sentences
+    rag.llm - project; LLMClient type and build_llm factory
+    configs - project; the Settings type (type checking only)
+    retrieval.retriever - project; HybridRetriever type and load_retriever factory
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -48,7 +78,10 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class AnswerResult:
-    """Everything an API response or evaluation needs about one answer."""
+    """
+    Class name: AnswerResult
+    Purpose: Everything an API response or evaluation needs about one answer.
+    """
 
     question: str
     query: str
@@ -62,12 +95,30 @@ class AnswerResult:
     raw_answer: str = ""  # model output before citation rewriting
 
     def to_dict(self) -> dict[str, Any]:
+        """
+        Function name: AnswerResult.to_dict
+        Purpose: Convert the result, including its citations, to a plain dictionary.
+        Parameters:
+            None
+        Returns:
+            dict[str, Any]: The result fields as a dictionary.
+        """
         d = asdict(self)
         d["citations"] = [c.to_dict() for c in self.citations]
         return d
 
 
 def _passage_dict(rank: int, h: Hit) -> dict[str, Any]:
+    """
+    Function name: _passage_dict
+    Purpose: Describe one retrieved passage for the response, with scores rounded to four
+             decimal places.
+    Parameters:
+        rank (int): The 1-based rank of the passage.
+        h (Hit): The retrieved passage and its scores.
+    Returns:
+        dict[str, Any]: The rank, chunk fields, label, text and scores of the passage.
+    """
     c = h.chunk
     return {
         "rank": rank,
@@ -82,7 +133,10 @@ def _passage_dict(rank: int, h: Hit) -> dict[str, Any]:
 
 
 class AnswerPipeline:
-    """Holds the retriever and LLM; one instance serves all requests."""
+    """
+    Class name: AnswerPipeline
+    Purpose: Holds the retriever and LLM; one instance serves all requests.
+    """
 
     def __init__(
         self,
@@ -95,6 +149,22 @@ class AnswerPipeline:
         rewrite_max_tokens: int = 40,
         few_shot: bool = True,
     ):
+        """
+        Function name: AnswerPipeline.__init__
+        Purpose: Store the retriever, the LLM client and the answering settings.
+        Parameters:
+            retriever (HybridRetriever): The passage retriever.
+            llm (LLMClient): The LLM client for rewrite and answer calls.
+            top_k (int): The number of passages to retrieve.
+            context_k (int): The number of top passages given to the model.
+            not_found_threshold (float): The lowest best re-ranker score that still counts
+                                         as enough evidence.
+            rewrite_mode (str): The default rewrite mode: "auto", "always" or "never".
+            rewrite_max_tokens (int): The token limit for the rewrite reply.
+            few_shot (bool): Whether the answer prompt includes the few-shot examples.
+        Returns:
+            None
+        """
         self.retriever = retriever
         self.llm = llm
         self.top_k = top_k
@@ -112,7 +182,21 @@ class AnswerPipeline:
         rewrite_mode: str | None = None,
         temperature: float | None = None,
     ) -> Iterator[dict[str, Any]]:
-        """Yield {"type": "query"|"sentence"|"result", ...} events; see module docstring."""
+        """
+        Function name: AnswerPipeline.stream_answer
+        Purpose: Answer one question as a stream of events: the search query, then each
+                 spoken sentence as soon as it is complete, then the final result. When the
+                 evidence is weak the LLM is skipped and the not-found reply is returned.
+        Parameters:
+            question (str): The user's question.
+            mode (str): The retrieval mode passed to the retriever, for example "full".
+            timer (StageTimer | None): Timer for stage timings; a new one is made when None.
+            rewrite_mode (str | None): Rewrite mode for this call; None uses the default.
+            temperature (float | None): Sampling temperature; None uses the client default.
+        Returns:
+            Iterator[dict[str, Any]]: yields {"type": "query"|"sentence"|"result", ...}
+                                      events; the last one carries the AnswerResult.
+        """
         timer = timer or StageTimer()
         with timer.stage("rewrite"):
             query = prepare_query(
@@ -193,7 +277,19 @@ class AnswerPipeline:
         rewrite_mode: str | None = None,
         temperature: float | None = None,
     ) -> AnswerResult:
-        """Run stream_answer() to completion and return the result."""
+        """
+        Function name: AnswerPipeline.answer
+        Purpose: Run stream_answer() to completion and return the result. Raises
+                 RuntimeError if the stream ends without a result event.
+        Parameters:
+            question (str): The user's question.
+            mode (str): The retrieval mode passed to the retriever, for example "full".
+            timer (StageTimer | None): Timer for stage timings; a new one is made when None.
+            rewrite_mode (str | None): Rewrite mode for this call; None uses the default.
+            temperature (float | None): Sampling temperature; None uses the client default.
+        Returns:
+            AnswerResult: The final answer with citations, passages and timings.
+        """
         for event in self.stream_answer(question, mode, timer, rewrite_mode, temperature):
             if event["type"] == "result":
                 return event["result"]
@@ -201,7 +297,17 @@ class AnswerPipeline:
 
 
 def build_pipeline(settings: Settings, retriever: HybridRetriever | None = None) -> AnswerPipeline:
-    """Pipeline from settings: on-disk index + configured LLM backend."""
+    """
+    Function name: build_pipeline
+    Purpose: Build the pipeline from settings: the on-disk index and the configured LLM
+             backend.
+    Parameters:
+        settings (Settings): The application settings.
+        retriever (HybridRetriever | None): A ready retriever to reuse; when None the index
+                                            is loaded from disk.
+    Returns:
+        AnswerPipeline: The configured pipeline.
+    """
     from rag.llm import build_llm
     from retrieval.retriever import load_retriever
 

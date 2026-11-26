@@ -1,10 +1,27 @@
-"""Keyword (sparse) retrieval with Okapi BM25 over the chunk texts.
+"""
+File: retrieval/bm25.py
+
+Description:
+    Keyword (sparse) retrieval with Okapi BM25 over the chunk texts.
+
+    BM25 catches exact words the dense model blurs: fee names, form numbers (HE-12), amounts.
 
 Flow:
     retrieval.retriever.load_retriever() -> BM25Index(chunk texts)   # rebuilt at load, < 1 s
     retrieval.retriever.HybridRetriever  -> BM25Index.search(query, k)
 
-BM25 catches exact words the dense model blurs: fee names, form numbers (HE-12), amounts.
+Libraries used:
+    re - standard library; word token pattern
+    rank_bm25 - third party; BM25Okapi scoring
+
+Created by: Srikar Gupta
+Created date: 2026-11-18
+Updated by: Srikar Gupta
+Updated date: 2026-11-26
+
+Change log:
+    2026-11-18  Srikar Gupta  First version.
+    2026-11-26  Srikar Gupta  File header and function comments in the standard format.
 """
 
 from __future__ import annotations
@@ -24,19 +41,50 @@ STOPWORDS = frozenset(
 
 
 def bm25_tokens(text: str) -> list[str]:
-    """Lower-cased word tokens without stop words; keeps hyphenated ids like he-12."""
+    """
+    Function name: bm25_tokens
+    Purpose: Produce lower-cased word tokens without stop words; ids joined by hyphens or
+             dots, such as he-12, are kept as one token.
+    Parameters:
+        text (str): text to tokenize
+    Returns:
+        list[str]: the tokens in order
+    """
     return [t for t in _WORD.findall(text.lower()) if t not in STOPWORDS]
 
 
 class BM25Index:
-    """In-memory BM25 over a fixed list of documents (positions match the chunk list)."""
+    """
+    Class name: BM25Index
+    Purpose: In-memory BM25 over a fixed list of documents (positions match the chunk list).
+    """
 
     def __init__(self, texts: list[str]):
+        """
+        Function name: BM25Index.__init__
+        Purpose: Build the BM25 model over the given texts. A text with no tokens is given a
+                 placeholder token so that positions still match; an empty list builds no
+                 model.
+        Parameters:
+            texts (list[str]): document texts, in chunk order
+        Returns:
+            None
+        """
         self._bm25 = BM25Okapi([bm25_tokens(t) or ["_"] for t in texts]) if texts else None
         self.size = len(texts)
 
     def search(self, query: str, k: int) -> list[tuple[int, float]]:
-        """Top-k (position, score) pairs with a positive score, best first."""
+        """
+        Function name: BM25Index.search
+        Purpose: Score every document against the query and return the top-k entries that
+                 have a positive score, best first.
+        Parameters:
+            query (str): search text
+            k (int): largest number of results to return
+        Returns:
+            list[tuple[int, float]]: (position, score) pairs; empty when the index is empty
+                                     or the query has no tokens
+        """
         if self._bm25 is None:
             return []
         tokens = bm25_tokens(query)
