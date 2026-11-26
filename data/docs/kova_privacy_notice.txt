@@ -1,0 +1,23 @@
+KOVA BANK PRIVACY NOTICE
+
+Sample document. Kova Bank is a fictional bank created for this demonstration.
+
+WHAT INFORMATION KOVA COLLECTS
+
+Kova collects the information you give when you open an account, such as your name, address, date of birth, government ID number and income. Kova also collects information about your transactions, your account balances, and the device and location data the Kova app uses to detect fraud.
+
+HOW KOVA SHARES INFORMATION
+
+Kova shares personal information with service providers that process payments and print statements, with credit bureaus, and with government agencies when the law requires it. Kova does not sell personal information. Kova shares information with partner companies for their marketing only if you agree, and you can withdraw that agreement at any time.
+
+YOUR CHOICES
+
+You can limit sharing for marketing by changing the privacy settings in the Kova app or by calling customer support. Your choice takes effect within 30 days and stays in place until you change it. If you have a joint account, a choice made by one account owner applies to both owners.
+
+HOW LONG KOVA KEEPS INFORMATION
+
+Kova keeps account records for 7 years after an account is closed, because banking regulations require it. After that period the records are deleted or anonymized.
+
+YOUR RIGHTS
+
+You can ask Kova for a copy of the personal information it holds about you, or ask Kova to correct it. Kova responds to these requests within 30 days. Requests can be made in the app under Settings, Privacy.

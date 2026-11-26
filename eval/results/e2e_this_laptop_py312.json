@@ -1,0 +1,72 @@
+{
+  "health": {
+    "status": "ok",
+    "llm_provider": "ollama",
+    "vector_store": "faiss",
+    "pipeline_loaded": true,
+    "stt_loaded": true,
+    "tts_loaded": true,
+    "chunks": 36,
+    "llm_model": "llama3.2:3b",
+    "llm_reachable": true
+  },
+  "text": {
+    "question": "What is the late payment fee on the Kova Rewards card?",
+    "answer": "The late payment fee on the Kova Rewards card is up to 30 dollars for the first late payment and up to 41 dollars if another payment is late within the next six billing cycles [kova_rewards_card_terms.pdf, p. 3].",
+    "citations": [
+      "kova_rewards_card_terms.pdf, p. 3"
+    ],
+    "server_timings": {
+      "rewrite_ms": 0.5,
+      "retrieval_ms": 442.8,
+      "llm_first_token_ms": 2843.0,
+      "llm_ms": 7868.8,
+      "total_ms": 8314.7
+    },
+    "client_total_ms": 8338.0,
+    "request_id": "409a845d1016"
+  },
+  "audio": {
+    "spoken_question": "Um, how much does Kova charge for an outgoing international wire?",
+    "transcript": "Um, how much does Kova charge for an outgoing international wire?",
+    "wer": 0.0,
+    "query": "How much does Kova charge for an outgoing international wire?",
+    "answer": "Kova charges 45 dollars for an outgoing international wire [kova_bank_account_faq.md, How long do transfers and wires take?].",
+    "citations": [
+      "kova_bank_account_faq.md, How long do transfers and wires take?"
+    ],
+    "reply_audio_seconds": 3.73,
+    "server_timings": {
+      "stt_ms": 4209.0,
+      "rewrite_ms": 9267.6,
+      "retrieval_ms": 2466.8,
+      "llm_first_token_ms": 34885.0,
+      "llm_ms": 20976.1,
+      "tts_ms": 613.8,
+      "tts_first_sentence_done_ms": 37534.3,
+      "total_ms": 37535.6
+    },
+    "client_total_ms": 37550.1,
+    "request_id": "6172d3bf7a34"
+  },
+  "websocket": {
+    "client_first_audio_ms": 17955.1,
+    "client_total_ms": 17956.1,
+    "sentences_streamed": 1,
+    "transcript": "Um, how much does Kova charge for an outgoing international wire?",
+    "answer": "Kova charges 45 dollars for an outgoing international wire [kova_bank_account_faq.md, How long do transfers and wires take?].",
+    "citations": [
+      "kova_bank_account_faq.md, How long do transfers and wires take?"
+    ],
+    "server_timings": {
+      "stt_ms": 4692.6,
+      "rewrite_ms": 3741.1,
+      "retrieval_ms": 2479.9,
+      "llm_first_token_ms": 13842.6,
+      "llm_ms": 5440.0,
+      "tts_ms": 1550.0,
+      "first_audio_ms": 17926.5,
+      "total_ms": 17926.7
+    }
+  }
+}

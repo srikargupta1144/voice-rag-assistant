@@ -1,0 +1,79 @@
+[project]
+name = "voice-rag-assistant"
+version = "0.1.0"
+description = "Ask questions out loud about a document set; hear a cited answer, or an honest 'not found'."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Srikar Tadakamalla" }]
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "pydantic>=2.9,<3",
+    "pydantic-settings[yaml]>=2.6,<3",
+    "numpy>=1.26,<3",
+    "httpx>=0.27,<1",
+    "typer>=0.12,<1",
+    # Ingestion: LlamaIndex core only (Document + MarkdownNodeParser + SentenceSplitter);
+    # the llama-index meta package would pull OpenAI integrations this project does not use.
+    "llama-index-core>=0.12,<0.15",
+    "pypdf>=5.0,<7",
+    # Retrieval. torch is declared DIRECTLY so [tool.uv.sources] pins it to the CPU index:
+    # source pins do not apply to transitive deps, and PyPI's linux torch drags in ~5 GB of CUDA.
+    "torch>=2.6,<3",
+    "sentence-transformers>=3.3,<6",
+    "faiss-cpu>=1.9,<2",
+    "rank-bm25>=0.2.2,<0.3",
+    # Voice
+    "faster-whisper>=1.1,<2",
+    "av>=12,<19",  # PyAV 19 removed the metadata_errors argument faster-whisper 1.2 passes
+    "piper-tts>=1.3,<2",
+    "huggingface-hub>=0.26,<2",
+    # API
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.32,<1",
+    "python-multipart>=0.0.12,<1",
+]
+
+[project.optional-dependencies]
+pinecone = ["pinecone>=5.0,<8"] # only used when PINECONE_API_KEY is set
+
+# torch always from the CPU index: deterministic CPU-only resolution on every machine.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<10",
+    "ruff>=0.7,<1",
+    "fpdf2>=2.8,<3", # renders the sample PDFs in scripts/make_sample_pdfs.py
+]
+
+[project.scripts]
+vra = "ingest.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["configs", "common", "ingest", "retrieval", "rag", "voice", "api", "eval"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["SIM905"] # a split() word list reads better than a 40-item literal
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["models: downloads and runs ML models (slow; opt-in)"]
+addopts = "-m \"not models\""

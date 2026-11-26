@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Secrets (the committed template is .env.example)
+.env
+
+# Models and generated audio (downloaded or rebuilt by scripts; keeps git small).
+# data/index/ IS committed: the parsed chunks (chunks.jsonl), the FAISS index and the
+# manifest are about 85 KB, and let a reader see exactly what retrieval searches.
+models/
+data/demo/
+*.wav
+
+# Local run logs
+*.log
+
+# CI-only result copies
+eval/results/retrieval_ci.json
+
+# IDE
+.vscode/
+.idea/

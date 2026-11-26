@@ -1,0 +1,46 @@
+# Local stack: the API container plus an Ollama server, CPU only.
+#   docker compose up --build
+# then open http://localhost:8000. The first start pulls llama3.2:3b (about 2 GB) into the
+# ollama volume; later starts reuse it. To use a hosted LLM instead, set
+# VRA_LLM__PROVIDER=openai and VRA_LLM__API_KEY in .env and run only the api service.
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  # One-shot job: make sure the model exists before the API starts answering.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "${VRA_LLM__MODEL:-llama3.2:3b}"]
+    restart: "no"
+
+  api:
+    build: .
+    image: voice-rag-assistant:latest
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      VRA_LLM__OLLAMA_URL: http://ollama:11434
+    ports:
+      - "8000:8000"
+
+volumes:
+  ollama: {}

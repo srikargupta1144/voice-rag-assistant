@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+models
+data/index
+data/demo
+tests
+eval/results
+.env
+*.wav

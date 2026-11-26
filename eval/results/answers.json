@@ -1,0 +1,1130 @@
+{
+  "llm_provider": "ollama",
+  "llm_model": "llama3.2:3b",
+  "judge_model": "llama3.2:3b",
+  "few_shot": true,
+  "temperature": 0.1,
+  "context_k": 3,
+  "not_found_threshold": 1.5,
+  "questions": 35,
+  "summary": {
+    "faithfulness": 0.8571,
+    "faithfulness_scored": 28,
+    "answer_relevancy": 0.8574,
+    "answer_relevancy_scored": 28,
+    "answered_rate": 0.9333,
+    "not_found_accuracy": 0.9429,
+    "unanswerable_declined": 1.0,
+    "citation_rate": 1.0,
+    "citation_correct": 1.0,
+    "median_llm_first_token_ms": 13996.3,
+    "median_total_ms": 15858.7
+  },
+  "rows": [
+    {
+      "id": "q01",
+      "question": "How long is the Acme home policy period?",
+      "answerable": true,
+      "query": "How long is the Acme home policy period?",
+      "answer": "The policy period is twelve months [acme_home_insurance_policy.pdf, p. 1].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 1"
+      ],
+      "top_score": 7.121422290802002,
+      "timings": {
+        "rewrite_ms": 1.5,
+        "retrieval_ms": 647.7,
+        "llm_first_token_ms": 10927.8,
+        "llm_ms": 11258.9,
+        "total_ms": 11909.4
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The policy period is twelve months."
+        ]
+      ],
+      "answer_relevancy": 0.7705068190892538,
+      "generated_questions": [
+        "What is the duration of the policy period?",
+        "Is the policy period twelve months long?",
+        "How long does a typical policy period last?"
+      ],
+      "eval_seconds": 21.5
+    },
+    {
+      "id": "q02",
+      "question": "What is the Coverage B limit for other structures like a detached garage?",
+      "answerable": true,
+      "query": "What is the Coverage B limit for other structures like a detached garage?",
+      "answer": "The Coverage B limit for other structures like a detached garage is 10 percent of the Coverage A limit [acme_home_insurance_policy.pdf, p. 2].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 2"
+      ],
+      "top_score": 7.308305263519287,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1821.0,
+        "llm_first_token_ms": 18515.2,
+        "llm_ms": 19200.7,
+        "total_ms": 21022.2
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The Coverage B limit for other structures like a detached garage is 10 percent of the Coverage A limit."
+        ]
+      ],
+      "answer_relevancy": 0.938897430896759,
+      "generated_questions": [
+        "What is the relationship between Coverage B and Coverage A limits for other structures like a detached garage?",
+        "Is the Coverage B limit for other structures like a detached garage a percentage of the Coverage A limit?",
+        "Can the Coverage B limit for other structures like a detached garage be 10 percent of the Coverage A limit?"
+      ],
+      "eval_seconds": 33.2
+    },
+    {
+      "id": "q03",
+      "question": "How much will Acme pay for stolen jewelry?",
+      "answerable": true,
+      "query": "How much will Acme pay for stolen jewelry?",
+      "answer": "According to the policy, Acme will pay up to 1,500 dollars for stolen jewelry [acme_home_insurance_policy.pdf, p. 3].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 3"
+      ],
+      "top_score": 3.1298749446868896,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1410.3,
+        "llm_first_token_ms": 16737.1,
+        "llm_ms": 17745.1,
+        "total_ms": 19156.1
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "According to the policy, Acme will pay up to 1,500 dollars for stolen jewelry."
+        ]
+      ],
+      "answer_relevancy": 0.8972681562105814,
+      "generated_questions": [
+        "What is the maximum amount Acme will pay for stolen jewelry under their policy?",
+        "Is the policy of Acme to cover all types of stolen jewelry?",
+        "Can Acme's policy be changed or modified to increase the payout amount for stolen jewelry?"
+      ],
+      "eval_seconds": 30.3
+    },
+    {
+      "id": "q04",
+      "question": "um so how long will Acme pay for my hotel if my house is unlivable?",
+      "answerable": true,
+      "query": "How long will Acme pay for temporary accommodation if my house is uninhabitable?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": false,
+      "citations": [],
+      "top_score": 1.8431341648101807,
+      "timings": {
+        "rewrite_ms": 4906.9,
+        "retrieval_ms": 1021.6,
+        "llm_first_token_ms": 20395.5,
+        "llm_ms": 15403.9,
+        "total_ms": 21332.7
+      },
+      "eval_seconds": 21.3
+    },
+    {
+      "id": "q05",
+      "question": "Is flood damage covered by the Acme home policy?",
+      "answerable": true,
+      "query": "Is flood damage covered by the Acme home policy?",
+      "answer": "No, flood damage is excluded from coverage under the Acme home insurance policy [acme_home_insurance_policy.pdf, p. 4].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 4"
+      ],
+      "top_score": 3.687857151031494,
+      "timings": {
+        "rewrite_ms": 0.2,
+        "retrieval_ms": 1414.6,
+        "llm_first_token_ms": 15655.9,
+        "llm_ms": 16212.3,
+        "total_ms": 17627.4
+      },
+      "citation_correct": true,
+      "faithfulness": 0.0,
+      "claims": [
+        [
+          false,
+          "No, flood damage is excluded from coverage under the Acme home insurance policy."
+        ]
+      ],
+      "answer_relevancy": 0.8681962688763937,
+      "generated_questions": [
+        "What types of damage are typically excluded from coverage under the Acme home insurance policy?",
+        "Is flood damage a common exclusion under home insurance policies?",
+        "Can homeowners expect to be fully covered for all types of damage under the Acme home insurance policy?"
+      ],
+      "eval_seconds": 29.0
+    },
+    {
+      "id": "q06",
+      "question": "How can I get coverage for sewer backup?",
+      "answerable": true,
+      "query": "How can I get coverage for sewer backup?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": false,
+      "citations": [],
+      "top_score": -5.424466609954834,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1520.6,
+        "total_ms": 1521.3
+      },
+      "eval_seconds": 1.5
+    },
+    {
+      "id": "q07",
+      "question": "What is the standard deductible on the Acme policy?",
+      "answerable": true,
+      "query": "What is the standard deductible on the Acme policy?",
+      "answer": "The standard all-peril deductible is 1,000 dollars [acme_home_insurance_policy.pdf, p. 5].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 5"
+      ],
+      "top_score": 7.313191890716553,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1195.3,
+        "llm_first_token_ms": 16297.5,
+        "llm_ms": 16736.4,
+        "total_ms": 17932.1
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The standard all-peril deductible is 1,000 dollars."
+        ]
+      ],
+      "answer_relevancy": 0.7504796187082926,
+      "generated_questions": [
+        "What is the typical deductible amount for an all-peril policy?",
+        "Is a $1,000 deductible considered a standard amount for an all-peril policy?",
+        "Can a $1,000 deductible be considered a relatively low deductible amount for an all-peril policy?"
+      ],
+      "eval_seconds": 36.0
+    },
+    {
+      "id": "q08",
+      "question": "What is the deductible for hail damage?",
+      "answerable": true,
+      "query": "What is the deductible for hail damage?",
+      "answer": "According to the policy, the deductible for losses caused by windstorm or hail is equal to 2 percent of the Coverage A limit [acme_home_insurance_policy.pdf, p. 5].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 5"
+      ],
+      "top_score": 4.523805141448975,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1348.0,
+        "llm_first_token_ms": 11020.7,
+        "llm_ms": 12725.8,
+        "total_ms": 14074.3
+      },
+      "citation_correct": true,
+      "faithfulness": 0.0,
+      "claims": [
+        [
+          false,
+          "According to the policy, the deductible for losses caused by windstorm or hail is equal to 2 percent of the Coverage A limit."
+        ]
+      ],
+      "answer_relevancy": 0.8624202013015747,
+      "generated_questions": [
+        "What is the deductible for losses caused by windstorm or hail under the policy?",
+        "How does the deductible for windstorm or hail losses compare to the Coverage A limit?",
+        "Is the deductible for windstorm or hail losses a fixed percentage of the Coverage A limit?"
+      ],
+      "eval_seconds": 32.9
+    },
+    {
+      "id": "q09",
+      "question": "uh what's the grace period if I'm late paying my Acme premium?",
+      "answerable": true,
+      "query": "What is the grace period for paying Acme premium?",
+      "answer": "The grace period for paying Acme premium is 15 days [acme_home_insurance_policy.pdf, p. 6].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 6"
+      ],
+      "top_score": 7.301294803619385,
+      "timings": {
+        "rewrite_ms": 4439.3,
+        "retrieval_ms": 907.3,
+        "llm_first_token_ms": 20434.8,
+        "llm_ms": 16676.9,
+        "total_ms": 22023.9
+      },
+      "citation_correct": true,
+      "faithfulness": 0.0,
+      "claims": [
+        [
+          false,
+          "The grace period for paying Acme premium is 15 days."
+        ]
+      ],
+      "answer_relevancy": 0.9293363293011984,
+      "generated_questions": [
+        "What is the deadline for paying Acme premium after the grace period?",
+        "How long does the grace period for paying Acme premium last?",
+        "Can I still pay Acme premium after the initial 15-day grace period has expired?"
+      ],
+      "eval_seconds": 39.0
+    },
+    {
+      "id": "q10",
+      "question": "Do I get a refund if I cancel my Acme home policy?",
+      "answerable": true,
+      "query": "Do I get a refund if I cancel my Acme home policy?",
+      "answer": "Yes, if you cancel your policy, you will receive a refund of any unearned premium on a pro rata basis, with no cancellation fee [acme_home_insurance_policy.pdf, p. 6].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 6"
+      ],
+      "top_score": 7.1868896484375,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1353.0,
+        "llm_first_token_ms": 11302.3,
+        "llm_ms": 13492.9,
+        "total_ms": 14846.4
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "Yes, if you cancel your policy, you will receive a refund of any unearned premium on a pro rata basis, with no cancellation fee."
+        ]
+      ],
+      "answer_relevancy": 0.8218493660291036,
+      "generated_questions": [
+        "Will I receive a full refund if I cancel my policy immediately after purchasing it?",
+        "Is the cancellation process for my policy free of any additional fees?",
+        "Can I get a refund of the unearned premium if I cancel my policy within a specific timeframe?"
+      ],
+      "eval_seconds": 32.7
+    },
+    {
+      "id": "q11",
+      "question": "What discount do I get for having a monitored alarm?",
+      "answerable": true,
+      "query": "What discount do I get for having a monitored alarm?",
+      "answer": "You get a 5 percent discount [acme_home_insurance_policy.pdf, p. 7].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_home_insurance_policy.pdf, p. 7"
+      ],
+      "top_score": 6.321446418762207,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1416.4,
+        "llm_first_token_ms": 11429.3,
+        "llm_ms": 11101.0,
+        "total_ms": 12517.9
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "You get a 5 percent discount."
+        ]
+      ],
+      "answer_relevancy": 0.6302122871081034,
+      "generated_questions": [
+        "What is the discount amount on a $100 item?",
+        "How much will you pay for an item originally priced at $200 after a 5 percent discount?",
+        "If you get a 5 percent discount, what percentage of the original price will you pay?"
+      ],
+      "eval_seconds": 23.5
+    },
+    {
+      "id": "q12",
+      "question": "How soon do I have to report a home insurance claim to Acme?",
+      "answerable": true,
+      "query": "How soon do I have to report a home insurance claim to Acme?",
+      "answer": "You must report a claim no later than 60 days after the date of loss [acme_claims_guide.md, Reporting a claim].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_claims_guide.md, Reporting a claim"
+      ],
+      "top_score": 8.196011543273926,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1307.6,
+        "llm_first_token_ms": 12974.2,
+        "llm_ms": 13670.1,
+        "total_ms": 14978.1
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "You must report a claim no later than 60 days after the date of loss."
+        ]
+      ],
+      "answer_relevancy": 0.7700532078742981,
+      "generated_questions": [
+        "What is the deadline for reporting a claim after a loss?",
+        "How long do I have to report a claim after a loss occurs?",
+        "When must I report a claim to the insurance company after a loss?"
+      ],
+      "eval_seconds": 24.9
+    },
+    {
+      "id": "q13",
+      "question": "How much will Acme reimburse for emergency repairs without approval?",
+      "answerable": true,
+      "query": "How much will Acme reimburse for emergency repairs without approval?",
+      "answer": "Acme will reimburse up to 2,500 dollars for reasonable emergency repairs without prior approval [acme_claims_guide.md, What to do right after a loss].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_claims_guide.md, What to do right after a loss"
+      ],
+      "top_score": 8.527812957763672,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1341.6,
+        "llm_first_token_ms": 14927.8,
+        "llm_ms": 15810.4,
+        "total_ms": 17152.5
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "Acme will reimburse up to 2,500 dollars for reasonable emergency repairs without prior approval."
+        ]
+      ],
+      "answer_relevancy": 0.6822924613952637,
+      "generated_questions": [
+        "Can employees use the reimbursement for non-emergency repairs that are still necessary for the safe operation of their vehicle?",
+        "Is the 2,500 dollar limit per incident or per calendar year?",
+        "Can employees submit receipts for repairs made prior to the company's knowledge of the issue?"
+      ],
+      "eval_seconds": 29.1
+    },
+    {
+      "id": "q14",
+      "question": "When do I need to file a police report after a theft?",
+      "answerable": true,
+      "query": "When do I need to file a police report after a theft?",
+      "answer": "You must file a police report within 48 hours of discovering the theft [acme_claims_guide.md, Documents you will need].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_claims_guide.md, Documents you will need"
+      ],
+      "top_score": 6.565578460693359,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1390.7,
+        "llm_first_token_ms": 14163.3,
+        "llm_ms": 14643.1,
+        "total_ms": 16034.3
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "You must file a police report within 48 hours of discovering the theft."
+        ]
+      ],
+      "answer_relevancy": 0.9070138931274414,
+      "generated_questions": [
+        "What is the typical timeframe for filing a police report after discovering a theft?",
+        "How soon after a theft should a police report be filed?",
+        "Can a police report be filed outside of the 48-hour window after a theft is discovered?"
+      ],
+      "eval_seconds": 26.8
+    },
+    {
+      "id": "q15",
+      "question": "so like when does the adjuster get assigned to my claim?",
+      "answerable": true,
+      "query": "When does an adjuster get assigned to my insurance claim?",
+      "answer": "An adjuster is assigned to your insurance claim within 2 business days after you report a claim [acme_claims_guide.md, The adjuster visit].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_claims_guide.md, The adjuster visit"
+      ],
+      "top_score": 5.096257209777832,
+      "timings": {
+        "rewrite_ms": 4559.1,
+        "retrieval_ms": 1528.8,
+        "llm_first_token_ms": 18185.7,
+        "llm_ms": 14969.4,
+        "total_ms": 21057.7
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "An adjuster is assigned to your insurance claim within 2 business days after you report a claim."
+        ]
+      ],
+      "answer_relevancy": 0.8875338236490885,
+      "generated_questions": [
+        "What is the typical timeframe for an adjuster to be assigned to an insurance claim after reporting it?",
+        "How quickly can an adjuster be assigned to an insurance claim after it is reported?",
+        "When can an adjuster typically be assigned to an insurance claim after the initial report is made?"
+      ],
+      "eval_seconds": 33.0
+    },
+    {
+      "id": "q16",
+      "question": "How long do I have to finish repairs to get the recoverable depreciation?",
+      "answerable": true,
+      "query": "How long do I have to finish repairs to get the recoverable depreciation?",
+      "answer": "You have 180 days from the first payment to complete repairs and receive the recoverable depreciation [acme_claims_guide.md, How claims are paid].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_claims_guide.md, How claims are paid"
+      ],
+      "top_score": 4.898811340332031,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1483.7,
+        "llm_first_token_ms": 15903.3,
+        "llm_ms": 16708.1,
+        "total_ms": 18192.3
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "You have 180 days from the first payment to complete repairs and receive the recoverable depreciation."
+        ]
+      ],
+      "answer_relevancy": 0.9267698129018148,
+      "generated_questions": [
+        "What is the maximum timeframe for completing repairs and receiving recoverable depreciation after the first payment?",
+        "How long do I have to complete repairs and receive recoverable depreciation after the first payment?",
+        "Can I complete repairs and receive recoverable depreciation within the timeframe of 180 days from the first payment?"
+      ],
+      "eval_seconds": 29.7
+    },
+    {
+      "id": "q17",
+      "question": "How do I dispute the amount Acme offers on a claim?",
+      "answerable": true,
+      "query": "How do I dispute the amount Acme offers on a claim?",
+      "answer": "You can dispute the amount Acme offers on a claim by asking for appraisal in writing within 60 days of the claim decision [acme_claims_guide.md, Disagreeing with a decision].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "acme_claims_guide.md, Disagreeing with a decision"
+      ],
+      "top_score": 3.970113754272461,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1285.1,
+        "llm_first_token_ms": 12417.1,
+        "llm_ms": 14147.6,
+        "total_ms": 15433.3
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "You can dispute the amount Acme offers on a claim by asking for appraisal in writing within 60 days of the claim decision."
+        ]
+      ],
+      "answer_relevancy": 0.7708768645922343,
+      "generated_questions": [
+        "Can you dispute the amount Acme offers on a claim by asking for appraisal in writing within a shorter timeframe?",
+        "How does asking for appraisal in writing within 60 days of the claim decision affect the dispute resolution process?",
+        "What is the purpose of requesting appraisal in writing within 60 days of the claim decision in the context of Acme's claims process?"
+      ],
+      "eval_seconds": 28.7
+    },
+    {
+      "id": "q18",
+      "question": "What is the minimum deposit to open a Kova High Yield Savings account?",
+      "answerable": true,
+      "query": "What is the minimum deposit to open a Kova High Yield Savings account?",
+      "answer": "The minimum opening deposit for a Kova High Yield Savings account is 100 dollars [kova_bank_account_faq.md, How do I open an account?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, How do I open an account?"
+      ],
+      "top_score": 8.937461853027344,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 978.0,
+        "llm_first_token_ms": 14046.8,
+        "llm_ms": 15091.9,
+        "total_ms": 16070.4
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The minimum opening deposit for a Kova High Yield Savings account is 100 dollars."
+        ]
+      ],
+      "answer_relevancy": 0.9660218159357706,
+      "generated_questions": [
+        "What is the minimum opening deposit required for a Kova High Yield Savings account?",
+        "How much is the minimum opening deposit for a Kova High Yield Savings account?",
+        "Can you open a Kova High Yield Savings account with a deposit as low as $100?"
+      ],
+      "eval_seconds": 27.3
+    },
+    {
+      "id": "q19",
+      "question": "How can I avoid the monthly fee on Everyday Checking?",
+      "answerable": true,
+      "query": "How can I avoid the monthly fee on Everyday Checking?",
+      "answer": "To avoid the monthly fee on Everyday Checking, you can either keep a daily balance of at least 1,500 dollars or receive at least 500 dollars in direct deposits during the statement cycle [kova_bank_account_faq.md, Is there a monthly fee on Everyday Checking?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, Is there a monthly fee on Everyday Checking?"
+      ],
+      "top_score": 5.787474155426025,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1275.4,
+        "llm_first_token_ms": 11103.7,
+        "llm_ms": 14409.6,
+        "total_ms": 15685.6
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "To avoid the monthly fee on Everyday Checking, you can either keep a daily balance of at least 1,500 dollars or receive at least 500 dollars in direct deposits during the statement cycle."
+        ]
+      ],
+      "answer_relevancy": 0.9542624950408936,
+      "generated_questions": [
+        "What is the minimum daily balance required to avoid the monthly fee on Everyday Checking?",
+        "How can I avoid the monthly fee on Everyday Checking?",
+        "What are the two options available to avoid the monthly fee on Everyday Checking?"
+      ],
+      "eval_seconds": 27.1
+    },
+    {
+      "id": "q20",
+      "question": "hey does Kova charge overdraft fees?",
+      "answerable": true,
+      "query": "does Kova charge overdraft fees?",
+      "answer": "Kova does not charge overdraft fees on Everyday Checking, but if a debit card purchase or ATM withdrawal would overdraw the account, it is declined [kova_bank_account_faq.md, What happens if I spend more than my balance?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, What happens if I spend more than my balance?"
+      ],
+      "top_score": 9.446977615356445,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1379.0,
+        "llm_first_token_ms": 13838.9,
+        "llm_ms": 15990.8,
+        "total_ms": 17370.5
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "Kova does not charge overdraft fees on Everyday Checking, but if a debit card purchase or ATM withdrawal would overdraw the account, it is declined."
+        ]
+      ],
+      "answer_relevancy": 0.8223048448562622,
+      "generated_questions": [
+        "Does Kova Everyday Checking account have overdraft protection options?",
+        "Is Kova Everyday Checking account subject to overdraft fees?",
+        "Can Kova Everyday Checking account be declined due to insufficient funds?"
+      ],
+      "eval_seconds": 27.9
+    },
+    {
+      "id": "q21",
+      "question": "What interest rate does Kova High Yield Savings pay?",
+      "answerable": true,
+      "query": "What interest rate does Kova High Yield Savings pay?",
+      "answer": "Kova High Yield Savings currently earns 3.80 percent APY [kova_bank_account_faq.md, How much interest does High Yield Savings earn?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, How much interest does High Yield Savings earn?"
+      ],
+      "top_score": 5.7268266677856445,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1465.5,
+        "llm_first_token_ms": 13996.3,
+        "llm_ms": 14392.6,
+        "total_ms": 15858.7
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "Kova High Yield Savings currently earns 3.80 percent APY."
+        ]
+      ],
+      "answer_relevancy": 0.8580152988433838,
+      "generated_questions": [
+        "Does Kova High Yield Savings offer a higher interest rate than traditional savings accounts?",
+        "Is 3.80 percent APY a competitive interest rate for a high-yield savings account?",
+        "Can Kova High Yield Savings be considered a good option for individuals looking to earn a higher interest rate on their savings?"
+      ],
+      "eval_seconds": 27.9
+    },
+    {
+      "id": "q22",
+      "question": "How much is an outgoing international wire at Kova?",
+      "answerable": true,
+      "query": "How much is an outgoing international wire at Kova?",
+      "answer": "An outgoing international wire at Kova costs 45 dollars [kova_bank_account_faq.md, How long do transfers and wires take?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, How long do transfers and wires take?"
+      ],
+      "top_score": 8.166050910949707,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1098.0,
+        "llm_first_token_ms": 14733.8,
+        "llm_ms": 15145.5,
+        "total_ms": 16244.0
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "An outgoing international wire at Kova costs 45 dollars."
+        ]
+      ],
+      "answer_relevancy": 0.9347365299860636,
+      "generated_questions": [
+        "How much does an outgoing international wire at Kova cost in dollars?",
+        "Does an outgoing international wire at Kova cost 45 dollars?",
+        "Is the cost of an outgoing international wire at Kova 45 dollars?"
+      ],
+      "eval_seconds": 26.4
+    },
+    {
+      "id": "q23",
+      "question": "What is the daily limit for mobile check deposits?",
+      "answerable": true,
+      "query": "What is the daily limit for mobile check deposits?",
+      "answer": "The daily limit for mobile check deposits is 5,000 dollars [kova_bank_account_faq.md, What are the mobile check deposit limits?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, What are the mobile check deposit limits?"
+      ],
+      "top_score": 8.701009750366211,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1317.3,
+        "llm_first_token_ms": 11720.0,
+        "llm_ms": 12086.3,
+        "total_ms": 13404.1
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The daily limit for mobile check deposits is 5,000 dollars."
+        ]
+      ],
+      "answer_relevancy": 0.9156549572944641,
+      "generated_questions": [
+        "Is the daily limit for mobile check deposits the same for all banks and financial institutions?",
+        "Can the daily limit for mobile check deposits be exceeded with prior approval from a bank representative?",
+        "Is the daily limit for mobile check deposits subject to change based on individual account types or customer status?"
+      ],
+      "eval_seconds": 24.6
+    },
+    {
+      "id": "q24",
+      "question": "Is there a fee to close my Kova account?",
+      "answerable": true,
+      "query": "Is there a fee to close my Kova account?",
+      "answer": "There is no fee to close your Kova account, except for an early closure fee of 25 dollars if you close it within 90 days of opening [kova_bank_account_faq.md, How do I close my account?].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_bank_account_faq.md, How do I close my account?"
+      ],
+      "top_score": 9.627584457397461,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1184.8,
+        "llm_first_token_ms": 13181.1,
+        "llm_ms": 15724.8,
+        "total_ms": 16910.1
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "There is no fee to close your Kova account, except for an early closure fee of 25 dollars if you close it within 90 days of opening."
+        ]
+      ],
+      "answer_relevancy": 0.9568232496579488,
+      "generated_questions": [
+        "Will I be charged a fee if I close my Kova account within 90 days of opening it?",
+        "Is there a fee associated with closing my Kova account?",
+        "Can I close my Kova account without incurring a fee?"
+      ],
+      "eval_seconds": 28.4
+    },
+    {
+      "id": "q25",
+      "question": "What is the late payment fee on the Kova Rewards card?",
+      "answerable": true,
+      "query": "What is the late payment fee on the Kova Rewards card?",
+      "answer": "The late payment fee on the Kova Rewards card is up to 30 dollars for the first late payment and up to 41 dollars if another payment is late within the next six billing cycles [kova_rewards_card_terms.pdf, p. 3].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_rewards_card_terms.pdf, p. 3"
+      ],
+      "top_score": 6.837414741516113,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1274.0,
+        "llm_first_token_ms": 16255.2,
+        "llm_ms": 19437.0,
+        "total_ms": 20711.5
+      },
+      "citation_correct": true,
+      "faithfulness": 0.0,
+      "claims": [
+        [
+          false,
+          "The late payment fee on the Kova Rewards card is up to 30 dollars for the first late payment and up to 41 dollars if another payment is late within the next six billing cycles."
+        ]
+      ],
+      "answer_relevancy": 0.9526475071907043,
+      "generated_questions": [
+        "What is the maximum late payment fee for the Kova Rewards card if it is late for the first time?",
+        "How much is the maximum late payment fee for the Kova Rewards card if it is late for the first time?",
+        "Is the late payment fee for the Kova Rewards card capped at $30 or $41?"
+      ],
+      "eval_seconds": 44.4
+    },
+    {
+      "id": "q26",
+      "question": "Does the Kova card charge a foreign transaction fee?",
+      "answerable": true,
+      "query": "Does the Kova card charge a foreign transaction fee?",
+      "answer": "According to the documents, there is no foreign transaction fee on the Kova Rewards Visa card [kova_rewards_card_terms.pdf, p. 3].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_rewards_card_terms.pdf, p. 3"
+      ],
+      "top_score": 7.760215759277344,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1139.2,
+        "llm_first_token_ms": 9541.4,
+        "llm_ms": 10611.1,
+        "total_ms": 11750.8
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "According to the documents, there is no foreign transaction fee on the Kova Rewards Visa card."
+        ]
+      ],
+      "answer_relevancy": 0.8075631658236185,
+      "generated_questions": [
+        "Does the Kova Rewards Visa card have any annual fees?",
+        "Is the Kova Rewards Visa card a cashback card?",
+        "Can I earn rewards on purchases made with the Kova Rewards Visa card?"
+      ],
+      "eval_seconds": 27.3
+    },
+    {
+      "id": "q27",
+      "question": "How long is the 0 percent intro APR on purchases with the Kova card?",
+      "answerable": true,
+      "query": "How long is the 0 percent intro APR on purchases with the Kova card?",
+      "answer": "The 0 percent introductory APR on purchases is 15 months for new cardholders [kova_rewards_card_terms.pdf, p. 2].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_rewards_card_terms.pdf, p. 2"
+      ],
+      "top_score": 7.511879920959473,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1496.6,
+        "llm_first_token_ms": 15380.6,
+        "llm_ms": 15914.9,
+        "total_ms": 17412.0
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The 0 percent introductory APR on purchases is 15 months for new cardholders."
+        ]
+      ],
+      "answer_relevancy": 0.8400985399881998,
+      "generated_questions": [
+        "How long does the 0 percent introductory APR on purchases last for new cardholders?",
+        "Is the 0 percent introductory APR on purchases available to new cardholders only?",
+        "Can the 0 percent introductory APR on purchases be applied to existing card accounts as well?"
+      ],
+      "eval_seconds": 28.5
+    },
+    {
+      "id": "q28",
+      "question": "How long does Kova keep my records after I close my account?",
+      "answerable": true,
+      "query": "How long does Kova keep my records after I close my account?",
+      "answer": "Kova keeps account records for 7 years after an account is closed [kova_privacy_notice.txt, HOW LONG KOVA KEEPS INFORMATION].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_privacy_notice.txt, HOW LONG KOVA KEEPS INFORMATION"
+      ],
+      "top_score": 9.658623695373535,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1183.6,
+        "llm_first_token_ms": 11444.7,
+        "llm_ms": 12042.2,
+        "total_ms": 13226.2
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "Kova keeps account records for 7 years after an account is closed."
+        ]
+      ],
+      "answer_relevancy": 0.9142067631085714,
+      "generated_questions": [
+        "What is the typical duration for which account records are kept after an account is closed?",
+        "How long does Kova typically keep account records after an account is closed?",
+        "In what timeframe does Kova usually retain account records after an account is closed?"
+      ],
+      "eval_seconds": 23.9
+    },
+    {
+      "id": "q29",
+      "question": "What is the minimum payment on the Kova card?",
+      "answerable": true,
+      "query": "What is the minimum payment on the Kova card?",
+      "answer": "The minimum payment on the Kova card is the greater of 35 dollars or 1 percent of the new balance plus interest and fees, or the full balance if it is less than 35 dollars [kova_rewards_card_terms.pdf, p. 4].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_rewards_card_terms.pdf, p. 4"
+      ],
+      "top_score": 7.27979850769043,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1244.3,
+        "llm_first_token_ms": 14555.0,
+        "llm_ms": 17919.6,
+        "total_ms": 19164.5
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "The minimum payment on the Kova card is the greater of 35 dollars or 1 percent of the new balance plus interest and fees, or the full balance if it is less than 35 dollars."
+        ]
+      ],
+      "answer_relevancy": 0.8105356891949972,
+      "generated_questions": [
+        "What is the minimum payment threshold for the Kova card?",
+        "Is the minimum payment based on the new balance, interest, and fees, or the full balance if it's less than 35 dollars?",
+        "Can the minimum payment be less than 35 dollars if the new balance is less than 35 dollars?"
+      ],
+      "eval_seconds": 37.1
+    },
+    {
+      "id": "q30",
+      "question": "Does Kova sell my personal information?",
+      "answerable": true,
+      "query": "Does Kova sell my personal information?",
+      "answer": "Kova does not sell personal information [kova_privacy_notice.txt, HOW KOVA SHARES INFORMATION].",
+      "found": true,
+      "not_found_correct": true,
+      "citations": [
+        "kova_privacy_notice.txt, HOW KOVA SHARES INFORMATION"
+      ],
+      "top_score": 9.86605453491211,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1358.7,
+        "llm_first_token_ms": 9737.2,
+        "llm_ms": 9418.3,
+        "total_ms": 10777.5
+      },
+      "citation_correct": true,
+      "faithfulness": 1.0,
+      "claims": [
+        [
+          true,
+          "Kova does not sell personal information."
+        ]
+      ],
+      "answer_relevancy": 0.8617587685585022,
+      "generated_questions": [
+        "Does Kova collect personal data from its users?",
+        "Is Kova's data collection transparent to its users?",
+        "Does Kova use personal data for targeted advertising?"
+      ],
+      "eval_seconds": 20.2
+    },
+    {
+      "id": "u01",
+      "question": "What are Kova Bank's current mortgage rates?",
+      "answerable": false,
+      "query": "What are Kova Bank's current mortgage rates?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": true,
+      "citations": [],
+      "top_score": 1.7429776191711426,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 941.6,
+        "llm_first_token_ms": 13574.6,
+        "llm_ms": 13560.5,
+        "total_ms": 14502.4
+      },
+      "eval_seconds": 14.5
+    },
+    {
+      "id": "u02",
+      "question": "Does Acme home insurance pay for my dog's vet bills?",
+      "answerable": false,
+      "query": "Does Acme home insurance pay for my dog's vet bills?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": true,
+      "citations": [],
+      "top_score": -1.9468672275543213,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1413.7,
+        "total_ms": 1414.3
+      },
+      "eval_seconds": 1.4
+    },
+    {
+      "id": "u03",
+      "question": "Can I open a Kova account in euros?",
+      "answerable": false,
+      "query": "Can I open a Kova account in euros?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": true,
+      "citations": [],
+      "top_score": 5.305606842041016,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 611.1,
+        "llm_first_token_ms": 10303.1,
+        "llm_ms": 10666.6,
+        "total_ms": 11278.1
+      },
+      "eval_seconds": 11.3
+    },
+    {
+      "id": "u04",
+      "question": "How much does Acme car insurance cost per month?",
+      "answerable": false,
+      "query": "How much does Acme car insurance cost per month?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": true,
+      "citations": [],
+      "top_score": 1.0734400749206543,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 1346.8,
+        "total_ms": 1347.5
+      },
+      "eval_seconds": 1.3
+    },
+    {
+      "id": "u05",
+      "question": "Who is the CEO of Kova Bank?",
+      "answerable": false,
+      "query": "Who is the CEO of Kova Bank?",
+      "answer": "I could not find that in the documents.",
+      "found": false,
+      "not_found_correct": true,
+      "citations": [],
+      "top_score": 0.10349364578723907,
+      "timings": {
+        "rewrite_ms": 0.1,
+        "retrieval_ms": 678.6,
+        "total_ms": 679.0
+      },
+      "eval_seconds": 0.7
+    }
+  ]
+}

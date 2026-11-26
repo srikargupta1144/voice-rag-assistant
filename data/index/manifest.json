@@ -1,0 +1,16 @@
+{
+  "documents": 14,
+  "sources": [
+    "acme_claims_guide.md",
+    "acme_home_insurance_policy.pdf",
+    "kova_bank_account_faq.md",
+    "kova_privacy_notice.txt",
+    "kova_rewards_card_terms.pdf"
+  ],
+  "chunks": 36,
+  "max_chunk_tokens": 189,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "vector_store": "faiss",
+  "seconds": 43.09
+}

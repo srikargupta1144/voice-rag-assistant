@@ -1,0 +1,5 @@
+{
+  "recall_at_5": 1.0,
+  "mrr_at_10": 0.978,
+  "note": "Full mode (hybrid + re-ranker) on eval/questions.jsonl. Raise deliberately after an improvement."
+}
