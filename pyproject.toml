@@ -49,6 +49,7 @@ explicit = true
 dev = [
     "pytest>=8.3,<10",
     "ruff>=0.7,<1",
+    "pytest-cov>=5.0,<8", # coverage report: pytest --cov
     "fpdf2>=2.8,<3", # renders the sample PDFs in scripts/make_sample_pdfs.py
 ]
 
@@ -73,7 +74,23 @@ ignore = ["SIM905"] # a split() word list reads better than a 40-item literal
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form"]
 
+# Three test levels: the default run is the fast suite (fakes only); "-m models" runs the
+# functional tests with the real embedding, re-ranker, Whisper and Piper models; "-m llm" runs
+# the end-to-end tests against a running Ollama with llama3.2:3b.
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["models: downloads and runs ML models (slow; opt-in)"]
-addopts = "-m \"not models\""
+markers = [
+    "models: loads and runs the real ML models (slow; opt-in with -m models)",
+    "llm: needs a running Ollama with llama3.2:3b (opt-in with -m llm)",
+]
+addopts = "-m \"not models and not llm\""
+
+[tool.coverage.run]
+source = ["api", "common", "configs", "ingest", "retrieval", "rag", "voice", "eval"]
+omit = ["tests/*", "scripts/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+# The fast suite measured 96 percent on 2026-11-26; fail CI if coverage drops below 90.
+fail_under = 90

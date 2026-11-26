@@ -33,6 +33,8 @@ Updated date: 2026-11-26
 Change log:
     2026-11-18  Srikar Gupta  First version.
     2026-11-26  Srikar Gupta  File header and function comments in the standard format.
+    2026-11-26  Srikar Gupta  A malformed stream line raises LLMError instead of a raw
+                              JSONDecodeError, so callers that catch LLMError handle it.
 """
 
 from __future__ import annotations
@@ -237,6 +239,8 @@ class OllamaClient(_BaseClient):
                         break
         except httpx.HTTPError as e:
             raise LLMError(f"ollama unreachable at {self.base_url}: {e}") from e
+        except json.JSONDecodeError as e:
+            raise LLMError(f"ollama returned a malformed stream line: {e}") from e
 
     def health(self) -> bool:
         """
@@ -335,6 +339,10 @@ class OpenAICompatClient(_BaseClient):
                         yield piece
         except httpx.HTTPError as e:
             raise LLMError(f"openai-compatible endpoint unreachable: {e}") from e
+        except json.JSONDecodeError as e:
+            raise LLMError(
+                f"openai-compatible endpoint returned a malformed stream line: {e}"
+            ) from e
 
     def health(self) -> bool:
         """

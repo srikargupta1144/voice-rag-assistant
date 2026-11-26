@@ -14,6 +14,7 @@ Change log:
 - 2026-11-26, Srikar Gupta: "Stop and send" and "Cancel" buttons, a player for the user's own recording, and a microphone picker.
 - 2026-11-26, Srikar Gupta: Page served with Cache-Control: no-store, because the browser kept an old copy and showed its "EncodingError: Unable to decode audio data" error after the update.
 - 2026-11-26, Srikar Gupta: Page events logged through POST /client-log; every transcript logged. Rewritten as a step-by-step workflow.
+- 2026-11-26, Srikar Gupta: Section 7 "Running the tests" added (fast unit suite, coverage, functional tests with the real models, end-to-end tests with Ollama); later sections renumbered.
 
 ## 1. Every time: start it
 
@@ -98,7 +99,31 @@ Harmless lines at startup: "Could not load library with AVX2 support" (FAISS use
 5. `.venv\Scripts\python -m scripts.download_models`, then `.venv\Scripts\vra ingest`.
 6. `.venv\Scripts\python -m pytest -q` (74 tests pass).
 
-## 7. What was changed for this laptop
+## 7. Running the tests
+
+Run these from the project folder in PowerShell. The two slow levels need the models in `models\` and the index in `data\index` (both already in place on this laptop).
+
+```powershell
+$env:KMP_DUPLICATE_LIB_OK = "TRUE"; $env:HF_HUB_OFFLINE = "1"
+
+# 1. Fast unit suite (fakes only, no models, no LLM): seconds
+.venv\Scripts\python -m pytest
+
+# 2. The same suite with a coverage report of the project packages
+.venv\Scripts\python -m pytest --cov
+
+# 3. Functional tests with the real models (retrieval, index build, Piper and Whisper, API
+#    with a scripted LLM): a few minutes, most of it model loading
+.venv\Scripts\python -m pytest -m models
+
+# 4. End-to-end tests with the real LLM: start Ollama first; skipped with a reason if it is
+#    not reachable at http://localhost:11434
+.venv\Scripts\python -m pytest -m llm
+```
+
+If the `llm` tests are skipped, start Ollama from the Start menu or run `& "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" serve` in another window, then run step 4 again. Details of what each level checks are in [docs/TECHNICAL_REFERENCE.md](docs/TECHNICAL_REFERENCE.md#testing).
+
+## 8. What was changed for this laptop
 
 | File | Change |
 | --- | --- |
@@ -111,7 +136,7 @@ Harmless lines at startup: "Could not load library with AVX2 support" (FAISS use
 | `README.md` | Option A install with pip, start script, how to use the page |
 | `eval/results/e2e_this_laptop_py312.json` | End-to-end timings measured on this laptop; the README tables keep the original run |
 
-## 8. Checks run on 2026-11-26
+## 9. Checks run on 2026-11-26
 
 | Check | Result |
 | --- | --- |

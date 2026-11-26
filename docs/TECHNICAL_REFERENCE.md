@@ -1,6 +1,6 @@
 # Technical reference
 
-Purpose: the detailed reference for the Voice RAG Assistant: architecture diagram, call flow, every folder, both install options, the API, configuration, evaluation method, CI, known limits and code conventions. The short overview is in the [README](../README.md); diagrams are in [ARCHITECTURE.md](ARCHITECTURE.md).
+Purpose: the detailed reference for the Voice RAG Assistant: architecture diagram, call flow, every folder, both install options, the API, configuration, evaluation method, CI, known limits, testing and code conventions. The short overview is in the [README](../README.md); diagrams are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 Created by: Srikar Gupta
 Created date: 2026-11-26
@@ -10,6 +10,7 @@ Updated date: 2026-11-26
 Change log:
 
 - 2026-11-26, Srikar Gupta: Moved here from the README so the README stays short. Content unchanged apart from relative links.
+- 2026-11-26, Srikar Gupta: Testing section added: the three test levels (fast unit suite, functional tests with the real models, end-to-end tests with Ollama), coverage and the CI coverage report.
 
 ## Architecture
 
@@ -217,9 +218,35 @@ The golden set [eval/questions.jsonl](../eval/questions.jsonl) has 35 questions:
 
 The RAGAS library itself resolves and installs into this environment (about 40 extra packages, including the LangChain stack), but it is not a project dependency: its metrics issue several structured-output calls per sample that a 3B local judge often fails to parse, and each call costs tens of seconds on this CPU. The judge prompts in `eval/answer_eval.py` implement the same two metric definitions with one short call each.
 
+## Testing
+
+The tests are in three levels. Markers in `pyproject.toml` decide which level runs; the default run excludes the two slow levels, so it stays fast.
+
+| Level | Folder | Marker | What it uses | Command |
+| --- | --- | --- | --- | --- |
+| Fast unit suite | `tests/unit/` | none | Fakes only: hashed bag-of-words encoder, word-overlap re-ranker, scripted LLM, fake STT and TTS | `.venv\Scripts\python -m pytest` |
+| Fast unit suite with coverage | `tests/unit/` | none | As above, plus a line coverage report of the project packages | `.venv\Scripts\python -m pytest --cov` |
+| Functional, real models | `tests/functional/` (and `tests/unit/test_voice_models.py`) | `models` | Committed index, bge-small, MiniLM re-ranker, faster-whisper small, Piper; a scripted LLM where an answer is needed | `.venv\Scripts\python -m pytest -m models` |
+| End to end, real LLM | `tests/functional/test_llm_e2e.py` | `llm` | Everything real, including llama3.2:3b in a running Ollama | `.venv\Scripts\python -m pytest -m llm` |
+
+Set `KMP_DUPLICATE_LIB_OK=TRUE` and `HF_HUB_OFFLINE=1` before the two slow levels (PowerShell: `$env:KMP_DUPLICATE_LIB_OK="TRUE"; $env:HF_HUB_OFFLINE="1"`). They need the models in `models/` (`python -m scripts.download_models`) and the index in `data/index`. With uv, replace `.venv\Scripts\python -m` with `uv run`.
+
+What the functional tests (`-m models`) check:
+
+- `test_retrieval_real.py`: seven golden questions from `eval/questions.jsonl` find their labelled source, page and key phrase in the top 5 of the full pipeline (dense, BM25, RRF and re-rank); four unanswerable questions, such as "Does Kova offer car loans?", score below the not-found threshold; each retrieval mode (dense, bm25, hybrid, full) returns hits with its own score.
+- `test_ingest_real.py`: a copy of `data/docs` is indexed with the real encoder into pytest's temporary folder; the manifest (36 chunks, 384 dimensions, five sources) and the chunk records match the committed index, and the new index ranks the same passage first. The committed `data/index` is never written.
+- `test_voice_real.py`: Piper speaks three golden questions, faster-whisper transcribes them with a word error rate of at most 0.3 (Piper varies its speech slightly on each run), and the transcript still retrieves the right document; Piper output is 16-bit mono WAV; silence gives an empty transcript.
+- `test_api_real.py`: the API with the real retriever, STT and TTS and a scripted LLM (a fixed answer with a `[1]` citation). `POST /ask` returns passages with dense, BM25, RRF and re-ranker scores; a not-found question never calls the LLM; `POST /ask/audio` with a Piper recording returns the right transcript and a spoken answer; a WebSocket turn sends one WAV frame after each sentence message.
+
+The end-to-end tests (`-m llm`) are skipped with a clear reason when Ollama is not reachable at `http://localhost:11434` or `llama3.2:3b` is not pulled. Start Ollama first (`ollama serve`, or the Ollama tray app). They check that an answerable question is answered with a citation of the right source through `POST /ask`, that an unanswerable question that passes the re-ranker gate is declined by the model with the not-found sentence, and that an unanswerable question that fails the gate never reaches the model. Each answer takes about 15 to 60 seconds on this laptop.
+
+Heavy models are loaded once per test session (session-scoped fixtures in `tests/functional/conftest.py`), so the functional level takes a few minutes in total, most of it model loading.
+
+Coverage settings are in `pyproject.toml` (`[tool.coverage.run]` and `[tool.coverage.report]`): the measured packages are `api`, `common`, `configs`, `ingest`, `retrieval`, `rag`, `voice` and `eval`; tests and scripts are left out; the report lists missing lines and hides fully covered files. No minimum percentage is enforced yet. `pytest --cov -m models` adds the functional tests to the measurement.
+
 ## CI
 
-[.github/workflows/ci.yml](../.github/workflows/ci.yml) runs ruff and the unit tests on every push and pull request, then builds the index from `data/docs`, runs the retrieval evaluation and fails the build when Recall@5 of the full pipeline drops below [eval/baseline.json](../eval/baseline.json). The LLM-based evaluation is not part of CI because the free runners cannot host the model; run it locally before raising the baseline.
+[.github/workflows/ci.yml](../.github/workflows/ci.yml) runs ruff and the fast unit tests with a coverage report (`uv run pytest --cov --cov-report=term-missing`) on every push and pull request, then builds the index from `data/docs`, runs the retrieval evaluation and fails the build when Recall@5 of the full pipeline drops below [eval/baseline.json](../eval/baseline.json). The LLM-based evaluation is not part of CI because the free runners cannot host the model; run it locally before raising the baseline.
 
 ## Known limits
 
@@ -239,7 +266,7 @@ The RAGAS library itself resolves and installs into this environment (about 40 e
 - Every source file starts with a docstring containing a `Flow:` section tracing who calls the module and what it calls; functions carry short docstrings.
 - Settings go in `configs/settings.py` and `configs/default.yaml`; secrets only through the environment or `.env`.
 - Ruff with a line length of 100: `uv run ruff format . ; uv run ruff check .`
-- Tests: `uv run pytest` (fast, no models); `uv run pytest -m models` additionally runs the real voice models.
+- Tests: `uv run pytest` (fast, no models); `uv run pytest -m models` runs the functional tests with the real models; `uv run pytest -m llm` runs the end-to-end tests with Ollama. See [Testing](#testing).
 
 ## How to read the results
 

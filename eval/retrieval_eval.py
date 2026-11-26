@@ -39,6 +39,8 @@ Updated date: 2026-11-26
 Change log:
     2026-11-18  Srikar Gupta  First version.
     2026-11-26  Srikar Gupta  File header and function comments in the standard format.
+    2026-11-26  Srikar Gupta  No crash when a question returns no hits or the golden set has
+                              no answerable question.
 """
 
 from __future__ import annotations
@@ -102,7 +104,9 @@ def evaluate(modes: list[str], depth: int = 10) -> dict:
         out["modes"][mode] = {
             "recall_at_5": mean(recalls),
             "mrr_at_10": mean(rrs),
-            "median_latency_ms": round(sorted(latencies)[len(latencies) // 2], 1),
+            "median_latency_ms": (
+                round(sorted(latencies)[len(latencies) // 2], 1) if latencies else None
+            ),
             "misses": [
                 p["id"]
                 for p in per_q
@@ -128,8 +132,11 @@ def evaluate(modes: list[str], depth: int = 10) -> dict:
             for s in scores
             if (s["top_rerank"] is not None and s["top_rerank"] >= threshold) == s["answerable"]
         )
-        ans = [s["top_rerank"] for s in scores if s["answerable"]]
-        una = [s["top_rerank"] for s in scores if not s["answerable"]]
+        # Questions with no hits have no score; leave them out of the min and max.
+        ans = [s["top_rerank"] for s in scores if s["answerable"] and s["top_rerank"] is not None]
+        una = [
+            s["top_rerank"] for s in scores if not s["answerable"] and s["top_rerank"] is not None
+        ]
         out["not_found_gate"] = {
             "threshold": threshold,
             "accuracy": round(correct / len(scores), 4),

@@ -1,7 +1,8 @@
-# CI: lint and unit tests on every push and pull request, then the retrieval quality gate:
-# build the index from data/docs, measure Recall@5 on eval/questions.jsonl and fail when it
-# drops below eval/baseline.json. No LLM runs in CI (the free runners cannot host one);
-# answer-quality evaluation runs locally with Ollama.
+# CI: lint and the fast unit tests (with a coverage report) on every push and pull request,
+# then the retrieval quality gate: build the index from data/docs, measure Recall@5 on
+# eval/questions.jsonl and fail when it drops below eval/baseline.json. No LLM runs in CI
+# (the free runners cannot host one); answer-quality evaluation and the "llm" tests run
+# locally with Ollama.
 
 name: ci
 
@@ -13,6 +14,10 @@ on:
 env:
   KMP_DUPLICATE_LIB_OK: "TRUE"
   HF_HUB_DISABLE_TELEMETRY: "1"
+  # Copy packages into .venv instead of hard-linking them from the uv cache. Recent NLTK
+  # refuses to open any data file with more than one hard link (st_nlink > 1), which broke
+  # LlamaIndex sentence splitting in CI. The Dockerfile sets the same option.
+  UV_LINK_MODE: copy
 
 jobs:
   test:
@@ -25,7 +30,8 @@ jobs:
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest
+      # Fast suite only (markers models and llm are excluded by default), with coverage.
+      - run: uv run pytest --cov --cov-report=term-missing
 
   retrieval-gate:
     runs-on: ubuntu-latest
