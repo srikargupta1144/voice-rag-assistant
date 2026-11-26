@@ -10,7 +10,7 @@
     "dense": {
       "recall_at_5": 0.9333,
       "mrr_at_10": 0.919,
-      "median_latency_ms": 108.1,
+      "median_latency_ms": 50.7,
       "misses": [
         "q03",
         "q04"
@@ -141,7 +141,7 @@
     "bm25": {
       "recall_at_5": 0.9667,
       "mrr_at_10": 0.9044,
-      "median_latency_ms": 0.3,
+      "median_latency_ms": 0.1,
       "misses": [
         "q04"
       ],
@@ -271,7 +271,7 @@
     "hybrid": {
       "recall_at_5": 0.9667,
       "mrr_at_10": 0.9131,
-      "median_latency_ms": 135.0,
+      "median_latency_ms": 48.2,
       "misses": [
         "q04"
       ],
@@ -401,7 +401,7 @@
     "full": {
       "recall_at_5": 1.0,
       "mrr_at_10": 0.9778,
-      "median_latency_ms": 2401.5,
+      "median_latency_ms": 714.5,
       "misses": [],
       "per_question": [
         {
